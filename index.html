@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20512%20512'%3E%3Cdefs%3E%3ClinearGradient%20id%3D'b'%20x1%3D'0'%20y1%3D'0'%20x2%3D'1'%20y2%3D'1'%3E%3Cstop%20offset%3D'0'%20stop-color%3D'%232E9BFF'%2F%3E%3Cstop%20offset%3D'.55'%20stop-color%3D'%231677FF'%2F%3E%3Cstop%20offset%3D'1'%20stop-color%3D'%230046A0'%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D'16'%20y%3D'16'%20width%3D'480'%20height%3D'480'%20rx%3D'116'%20fill%3D'url(%23b)'%2F%3E%3Cg%20fill%3D'none'%20stroke%3D'%23FFF'%20stroke-linecap%3D'round'%3E%3Cpath%20d%3D'M174%20382A62%2062%200%200%200%20112%20320'%20stroke-width%3D'18'%20stroke-opacity%3D'.95'%2F%3E%3Cpath%20d%3D'M198%20382A88%2088%200%200%200%20112%20296'%20stroke-width%3D'16'%20stroke-opacity%3D'.72'%2F%3E%3Cpath%20d%3D'M222%20382A114%20114%200%200%200%20112%20272'%20stroke-width%3D'14'%20stroke-opacity%3D'.45'%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D'112'%20cy%3D'382'%20r%3D'16'%20fill%3D'%23FFF'%20opacity%3D'.95'%2F%3E%3Cpath%20d%3D'M236%20228l82%20180%2082-180'%20fill%3D'none'%20stroke%3D'%23FFF'%20stroke-width%3D'52'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%2F%3E%3C%2Fsvg%3E">
+<title>今日动线 · 日常工作代办清单</title>
+<style>
+/* ============================================================
+   设计系统
+   ============================================================ */
+:root{
+  --bg:        #F2F5FA;
+  --surface:   #FFFFFF;
+  --ink:       #16304B;
+  --ink-soft:  #5B6E86;
+  --ink-faint: #8FA2B8;
+  --line:      #E3EAF3;
+  --accent:    #1677FF;
+  --accent-deep: #0B5FD9;
+  --accent-soft: #E8F1FF;
+  --good:      #00A870;
+  --warn:      #E8A400;
+  --danger:    #E64545;
+  --shadow-1: 0 1px 2px rgba(22,48,75,.05), 0 4px 16px rgba(22,48,75,.06);
+  --shadow-2: 0 8px 32px rgba(22,48,75,.12);
+  --radius:    14px;
+  --radius-s:  10px;
+  --font: "PingFang SC","Microsoft YaHei","HarmonyOS Sans SC",system-ui,sans-serif;
+  --mono: "SF Mono","Cascadia Mono",Consolas,monospace;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  font-family:var(--font);
+  background:
+    radial-gradient(1000px 420px at 85% -80px, rgba(22,119,255,.08), transparent 60%),
+    var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+input,select,textarea{ font-family:inherit; color:inherit; }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ============================================================
+   布局
+   ============================================================ */
+.wrap{ max-width:1160px; margin:0 auto; padding:28px 24px 64px; }
+
+.topbar{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand-mark{
+  width:38px; height:38px; border-radius:11px; flex:none;
+  background:linear-gradient(135deg,var(--accent) 0%, #3E9BFF 100%);
+  color:#fff; font-weight:800; font-size:17px;
+  display:grid; place-items:center; box-shadow:0 6px 16px rgba(22,119,255,.35);
+}
+.brand h1{ font-size:19px; letter-spacing:.5px; font-weight:800; }
+.brand p{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+.top-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.today-chip{
+  font-size:12.5px; color:var(--ink-soft); background:var(--surface);
+  border:1px solid var(--line); padding:7px 12px; border-radius:999px;
+  display:flex; align-items:center; gap:7px;
+}
+.today-chip b{ color:var(--accent); font-weight:700; }
+.today-chip .count{ color:var(--accent); font-weight:800; font-family:var(--mono); }
+
+/* ============ 云同步状态 ============ */
+.sync-chip{
+  font-size:12px; color:var(--ink-soft); background:var(--surface);
+  border:1px solid var(--line); padding:7px 12px; border-radius:999px;
+  display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
+  transition:border-color .15s, box-shadow .15s;
+}
+.sync-chip:hover{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(22,119,255,.10); }
+.sync-dot{ width:8px; height:8px; border-radius:99px; background:var(--ink-faint); flex:none; transition:background .2s; }
+.sync-dot.ok{ background:var(--good); }
+.sync-dot.err{ background:var(--danger); }
+.sync-dot.busy{ background:var(--accent); animation:pulse 1.1s ease infinite; }
+@keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+
+/* ============================================================
+   卡片
+   ============================================================ */
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-1); }
+.card-head{ display:flex; align-items:center; justify-content:space-between; padding:15px 18px; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap; }
+.card-head h2{ font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; }
+.card-head h2 .tag{ font-size:11px; font-weight:600; color:var(--ink-faint); background:var(--bg); border:1px solid var(--line); padding:2px 8px; border-radius:999px; }
+.card-body{ padding:18px; }
+
+/* ============================================================
+   今日动线（智能排序签名区）
+   ============================================================ */
+.route{ margin-bottom:20px; overflow:hidden; }
+.route-body{ padding:16px 18px 14px; }
+.route .card-body{ padding:16px 18px 14px; }
+.route-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.route-title{ display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:700; }
+.route-title .spark{ color:var(--accent); }
+.route-desc{ font-size:12px; color:var(--ink-soft); margin-top:3px; }
+.route-meta{ font-size:12px; color:var(--ink-faint); font-family:var(--mono); }
+.route-list{ display:flex; gap:10px; overflow-x:auto; padding:16px 2px 6px; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.route-list::-webkit-scrollbar{ height:6px; }
+.route-list::-webkit-scrollbar-thumb{ background:var(--line); border-radius:99px; }
+.route-item{
+  flex:0 0 auto; min-width:150px; max-width:200px;
+  background:var(--bg); border:1px solid var(--line); border-radius:var(--radius-s);
+  padding:11px 12px 10px 12px; position:relative; transition:border-color .15s, transform .15s;
+}
+.route-item:hover{ border-color:#C7D8F2; transform:translateY(-1px); }
+.route-item.hot{ background:var(--accent-soft); border-color:var(--accent); }
+.route-item.done{ opacity:.55; }
+.route-num{
+  width:24px; height:24px; border-radius:8px; background:var(--surface);
+  border:1.5px solid var(--accent); color:var(--accent);
+  font-family:var(--mono); font-size:12px; font-weight:800;
+  display:grid; place-items:center; margin-bottom:8px;
+}
+.route-item.hot .route-num{ background:var(--accent); color:#fff; }
+.route-item.done .route-num{ background:#C7D8F2; border-color:#C7D8F2; color:#fff; }
+.route-item .t{ font-size:13px; font-weight:700; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.route-item .s{ font-size:11px; color:var(--ink-faint); margin-top:4px; display:flex; align-items:center; gap:4px; }
+.route-empty{ font-size:13px; color:var(--ink-faint); padding:14px 0 8px; }
+
+/* ============================================================
+   工具栏
+   ============================================================ */
+.toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px 18px; }
+.toolbar .search-box{ position:relative; flex:1; min-width:190px; max-width:340px; }
+.search-box input{
+  width:100%; padding:9px 14px 9px 36px; border:1px solid var(--line); border-radius:999px;
+  font-size:13px; background:var(--bg); transition:border-color .15s, box-shadow .15s;
+}
+.search-box input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(22,119,255,.12); background:#fff; }
+.search-box .ico{ position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--ink-faint); font-size:13px; pointer-events:none; }
+.filter-group{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.fbtn{
+  font-size:12.5px; padding:7px 13px; border-radius:999px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink-soft); transition:all .15s; white-space:nowrap;
+}
+.fbtn:hover{ border-color:#C7D8F2; color:var(--ink); }
+.fbtn.active{ background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+
+/* ============ 批量删除 ============ */
+.batch-bar{
+  display:none; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  margin:0 18px 14px; padding:10px 16px; border:1px dashed var(--accent);
+  background:var(--accent-soft); border-radius:12px;
+}
+.batch-bar.show{ display:flex; }
+.batch-bar .b-count{ font-size:13px; font-weight:700; color:var(--accent-deep); }
+.batch-bar .b-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.batch-bar .btn{ padding:7px 14px; font-size:12.5px; }
+.batch-bar .btn-danger{ background:var(--danger); color:#fff; border:1px solid var(--danger); }
+.batch-bar .btn-danger:hover{ background:#D13B3B; }
+.batch-check{
+  width:20px; height:20px; border-radius:6px; border:2px solid #C9D6E6; flex:none; cursor:pointer;
+  display:inline-grid; place-items:center; color:transparent; font-size:11px;
+  background:var(--surface); transition:all .15s; line-height:1;
+}
+.batch-check.sel{ background:var(--accent); border-color:var(--accent); color:#fff; }
+
+/* ============ 模块切换 ============ */
+.module-switch{ display:flex; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:3px; gap:2px; }
+.module-switch .ms-btn{
+  font-size:12.5px; font-weight:700; padding:7px 16px; border-radius:999px;
+  color:var(--ink-soft); transition:all .15s; white-space:nowrap;
+}
+.module-switch .ms-btn:hover{ color:var(--accent); }
+.module-switch .ms-btn.active{ background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(22,119,255,.25); }
+
+/* ============ SOP 流程 ============ */
+.sop-list{ padding:14px 18px 18px; display:grid; gap:12px; }
+.sop-card{ border:1px solid var(--line); border-radius:var(--radius-s); background:var(--bg); padding:14px 16px; }
+.sop-card.sel{ background:var(--accent-soft); border-color:var(--accent); }
+.sop-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.sop-name{ font-size:14.5px; font-weight:800; flex:1; min-width:160px; }
+.sop-node-count{ font-size:11.5px; color:var(--ink-faint); font-family:var(--mono); }
+.sop-ops{ display:flex; gap:6px; align-items:center; }
+.sop-check{
+  width:20px; height:20px; border-radius:6px; border:2px solid #C9D6E6; flex:none; cursor:pointer;
+  display:inline-grid; place-items:center; color:transparent; font-size:11px;
+  background:var(--surface); transition:all .15s; line-height:1;
+}
+.sop-check.sel{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.sop-flow-chart{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:12px; }
+.sop-flow-node{
+  font-size:11.5px; font-weight:600; padding:4px 11px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink-soft);
+  display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+}
+.sop-flow-node.start{ background:var(--good); border-color:var(--good); color:#fff; }
+.sop-flow-node.end{ background:var(--danger); border-color:var(--danger); color:#fff; }
+.sop-flow-node .est{ font-size:10px; opacity:.8; font-family:var(--mono); }
+.sop-flow-arrow{ color:var(--ink-faint); font-size:11px; flex:none; }
+.sop-empty{ text-align:center; color:var(--ink-faint); font-size:13px; padding:38px 0; }
+.sop-empty .big{ font-size:30px; margin-bottom:8px; }
+
+/* 任务中的 SOP 进度 */
+.sop-progress-pill{
+  font-size:11px; padding:2.5px 9px; border-radius:999px; font-weight:600;
+  display:inline-flex; align-items:center; gap:4px; white-space:nowrap; cursor:pointer;
+  background:var(--accent-soft); color:var(--accent-deep); border:1px solid #C9DFFF;
+}
+.sop-progress-pill:hover{ border-color:var(--accent); }
+.sop-picker{ border:1px dashed var(--accent); background:var(--accent-soft); border-radius:12px; padding:10px 12px; }
+.sop-picker-title{ font-size:12px; font-weight:700; color:var(--accent-deep); margin-bottom:8px; }
+.sop-picker-nodes{ display:flex; flex-direction:column; gap:6px; max-height:220px; overflow:auto; }
+.sop-pick-item{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+  font-size:12.5px; font-weight:600; padding:7px 10px; border-radius:9px;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink-soft);
+  transition:all .15s; cursor:pointer;
+}
+.sop-pick-item:hover{ border-color:var(--accent); color:var(--accent-deep); }
+.sop-pick-item.cur{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.sop-pick-item .pi{
+  width:18px; height:18px; border-radius:6px; flex:none; display:grid; place-items:center;
+  font-size:10.5px; font-family:var(--mono); background:var(--accent-soft); color:var(--accent-deep);
+}
+.sop-pick-item.cur .pi{ background:rgba(255,255,255,.25); color:#fff; }
+
+/* ============ SOP 节点编辑 / 排序 ============ */
+.sop-node-row{
+  display:flex; align-items:center; gap:8px; margin:6px 0;
+  padding:8px 10px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface); transition:border-color .15s;
+}
+.sop-node-row:hover{ border-color:#C7D8F2; }
+.sop-node-row.editing{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(22,119,255,.10); }
+.sop-node-idx{
+  width:24px; height:24px; border-radius:8px; flex:none; display:grid; place-items:center;
+  font-size:11.5px; font-family:var(--mono); font-weight:800;
+  background:var(--accent-soft); color:var(--accent-deep); border:1px solid #C9DFFF;
+}
+.sop-node-body{ flex:1; min-width:0; }
+.sop-node-name{ font-size:13px; font-weight:600; word-break:break-word; }
+.sop-node-meta{ font-size:11px; color:var(--ink-faint); font-family:var(--mono); margin-top:2px; }
+.sop-node-ops{ display:flex; gap:2px; align-items:center; flex:none; }
+.sop-node-ops .op{ width:26px; height:26px; font-size:12.5px; }
+.sop-node-edit-form{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.sop-node-edit-form input[type=text]{
+  flex:1; min-width:120px; padding:7px 11px; border:1px solid var(--line);
+  border-radius:8px; font-size:12.5px; background:var(--bg);
+}
+.sop-node-edit-form input[type=number]{
+  width:84px; padding:7px 10px; border:1px solid var(--line);
+  border-radius:8px; font-size:12.5px; background:var(--bg);
+}
+.sop-node-edit-form input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(22,119,255,.12); }
+.sop-node-edit-form .mini-btn{
+  padding:7px 13px; border-radius:8px; font-size:12.5px; font-weight:700; white-space:nowrap;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink-soft); transition:all .15s;
+}
+.sop-node-edit-form .mini-btn:hover{ border-color:var(--accent); color:var(--accent-deep); }
+.sop-node-edit-form .mini-btn.ok{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.btn{
+  display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700;
+  padding:9px 16px; border-radius:10px; transition:all .15s; white-space:nowrap;
+}
+.btn-primary{ background:var(--accent); color:#fff; box-shadow:0 4px 12px rgba(22,119,255,.28); }
+.btn-primary:hover{ background:var(--accent-deep); transform:translateY(-1px); }
+.btn-ghost{ background:var(--surface); border:1px solid var(--line); color:var(--ink-soft); }
+.btn-ghost:hover{ border-color:var(--accent); color:var(--accent); }
+
+/* ============ 统计 ============ */
+.stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; padding:0 18px 18px; }
+.stat{ background:var(--bg); border:1px solid var(--line); border-radius:var(--radius-s); padding:11px 14px; }
+.stat .k{ font-size:11.5px; color:var(--ink-faint); display:flex; align-items:center; gap:5px; }
+.stat .v{ font-size:20px; font-weight:800; font-family:var(--mono); margin-top:3px; }
+.stat .v small{ font-size:12px; font-weight:600; color:var(--ink-soft); font-family:var(--font); }
+.stat.warn .v{ color:var(--danger); }
+
+/* ============ 任务列表 ============ */
+.tasklist{ padding:0 8px 10px; }
+.task-group{ margin-bottom:6px; }
+.task-group-label{
+  display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700;
+  color:var(--ink-soft); padding:12px 12px 6px;
+}
+.task-group-label .gcount{ font-size:11px; color:var(--ink-faint); font-family:var(--mono); font-weight:600; }
+.task-group-label .gbar{ flex:0 0 10px; height:3px; border-radius:99px; }
+.task-row{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px;
+  padding:11px 12px; border-radius:var(--radius-s); border:1px solid transparent;
+  transition:background .15s, border-color .15s;
+}
+.task-row:hover{ background:var(--bg); border-color:var(--line); }
+.task-row.sel{ background:var(--accent-soft); border-color:var(--accent); }
+.task-check{
+  width:22px; height:22px; border-radius:7px; border:2px solid #C9D6E6; flex:none;
+  display:grid; place-items:center; color:transparent; font-size:12px; transition:all .15s;
+}
+.task-row:hover .task-check{ border-color:var(--accent); }
+.task-check.checked{ background:var(--good); border-color:var(--good); color:#fff; }
+.task-check.sel{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.task-main{ min-width:0; }
+.task-title{ font-size:14px; font-weight:600; line-height:1.4; word-break:break-word; }
+.task-row.done .task-title{ color:var(--ink-faint); text-decoration:line-through; }
+.task-sub{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:5px; }
+.pill{
+  font-size:11px; padding:2.5px 9px; border-radius:999px; font-weight:600;
+  display:inline-flex; align-items:center; gap:4px; white-space:nowrap;
+}
+.pill.cat{ background:var(--bg); color:var(--ink-soft); border:1px solid var(--line); }
+.pill.time{ font-family:var(--mono); }
+.pill.deadline{ color:#fff; }
+.pill.overdue{ background:var(--danger); }
+.pill.today{ background:var(--warn); }
+.pill.soon{ background:var(--accent); }
+.pill.normal{ background:var(--ink-faint); }
+.pill.est{ background:var(--accent-soft); color:var(--accent-deep); }
+.pill.priority{ color:#fff; }
+.p-p1{ background:var(--danger); }
+.p-p2{ background:var(--warn); }
+.p-p3{ background:#C98A00; }
+.p-p4{ background:#57A45F; }
+.task-ops{ display:flex; align-items:center; gap:4px; }
+.op{
+  width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+  font-size:13.5px; color:var(--ink-faint); transition:all .12s; flex:none;
+}
+.op:hover{ background:var(--bg); color:var(--accent); }
+.op.danger:hover{ background:#FDECEC; color:var(--danger); }
+.task-empty{ text-align:center; padding:52px 20px; }
+.task-empty .big{ font-size:40px; }
+.task-empty .t{ font-weight:700; font-size:14.5px; margin-top:10px; }
+.task-empty .s{ font-size:12.5px; color:var(--ink-faint); margin-top:5px; }
+
+/* ============ 视图切换 ============ */
+.view-switch{ display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--bg); }
+.vs-btn{ padding:7px 14px; font-size:12.5px; font-weight:600; color:var(--ink-soft); transition:all .15s; }
+.vs-btn:hover{ color:var(--ink); }
+.vs-btn.active{ background:var(--accent); color:#fff; }
+
+/* ============ 甘特图 ============ */
+.gantt-legend{ display:flex; gap:16px; flex-wrap:wrap; padding:10px 18px 4px; font-size:11.5px; color:var(--ink-soft); }
+.gantt-legend span{ display:inline-flex; align-items:center; gap:6px; }
+.gantt-legend i{ width:12px; height:12px; border-radius:4px; display:inline-block; }
+.gantt-legend .now-i{ width:14px; height:2px; background:var(--danger); }
+.gantt-wrap{ display:flex; padding:10px 12px 16px; min-width:0; }
+.gantt-labels{ flex:0 0 190px; border-right:1px solid var(--line); padding-right:8px; min-width:0; }
+.gantt-lhead{ font-size:11px; color:var(--ink-faint); font-weight:700; padding:7px 6px 9px; }
+.gantt-lrow{ display:flex; flex-direction:column; justify-content:center; gap:1px; height:36px; padding:0 6px; border-bottom:1px dashed var(--line); min-width:0; }
+.gantt-lrow .lname{ font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gantt-lrow .lmeta{ font-size:10px; color:var(--ink-faint); display:flex; align-items:center; gap:4px; }
+.gantt-lrow .lmeta .lstate.long{ color:var(--danger); font-weight:700; }
+.gantt-lrow .lmeta .lstate.done-s{ color:var(--good); }
+.gantt-timeline{ flex:1; overflow-x:auto; position:relative; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.gantt-timeline::-webkit-scrollbar{ height:8px; }
+.gantt-timeline::-webkit-scrollbar-thumb{ background:var(--line); border-radius:99px; }
+.gantt-thead{ display:flex; }
+.gantt-day{ flex:none; font-size:10.5px; color:var(--ink-faint); text-align:center; box-sizing:border-box; }
+.gantt-day.today{ color:var(--accent); font-weight:800; background:var(--accent-soft); }
+.gantt-body{ position:relative; }
+.gantt-row{ position:relative; height:36px; border-bottom:1px dashed var(--line); }
+.gline{ position:absolute; top:0; bottom:0; width:0; border-left:1px solid var(--line); z-index:2; }
+.gline.today-line{ border-left:2px solid var(--danger); z-index:3; }
+.gantt-bar{
+  position:absolute; top:8px; height:20px; border-radius:6px; z-index:1;
+  background:linear-gradient(135deg,#3E9BFF,#1677FF); color:#fff;
+  font-size:10.5px; display:flex; align-items:center; padding:0 6px; gap:4px;
+  overflow:hidden; white-space:nowrap; box-shadow:0 1px 4px rgba(22,119,255,.28); cursor:pointer;
+  min-width:14px;
+}
+.gantt-bar.done{ background:linear-gradient(135deg,#2BC48F,#00A56C); box-shadow:none; }
+.gantt-bar.overlong{ background:linear-gradient(135deg,#FF6B6B,#E64545); box-shadow:0 1px 5px rgba(230,69,69,.35); }
+.gantt-bar .bname{ overflow:hidden; text-overflow:ellipsis; }
+.gantt-empty{ text-align:center; padding:46px 20px; color:var(--ink-faint); font-size:13px; line-height:1.8; }
+
+/* ============ 备注编辑 ============ */
+.pill.note-pill{ background:var(--accent-soft); color:var(--accent-deep); border:1px dashed #A9C4F5; cursor:pointer; max-width:280px; overflow:hidden; text-overflow:ellipsis; }
+.pill.note-pill:hover{ border-style:solid; border-color:var(--accent); background:#DCEBFF; }
+.note-editor{ margin-top:8px; display:grid; gap:8px; max-width:560px; }
+.note-editor textarea{ width:100%; padding:9px 11px; border:1px solid var(--accent); border-radius:10px; font-size:12.5px; resize:vertical; min-height:52px; background:#fff; }
+.note-editor textarea:focus{ outline:none; box-shadow:0 0 0 3px rgba(22,119,255,.12); }
+.note-editor-actions{ display:flex; gap:8px; justify-content:flex-end; }
+
+/* ============ 分类栏 ============ */
+.cats{ display:flex; gap:9px; overflow-x:auto; padding:2px; scrollbar-width:none; }
+.cats::-webkit-scrollbar{ display:none; }
+.cat-tab{
+  flex:0 0 auto; display:inline-flex; align-items:center; gap:7px;
+  font-size:12.5px; font-weight:600; color:var(--ink-soft);
+  padding:8px 14px; border-radius:999px; border:1px solid var(--line);
+  background:var(--surface); transition:all .15s;
+}
+.cat-tab:hover{ border-color:#C7D8F2; color:var(--ink); }
+.cat-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+.cat-tab .n{ font-size:11px; font-family:var(--mono); opacity:.75; }
+.cat-tab .cdel{ opacity:.45; font-size:11px; padding:0 2px; border-radius:4px; }
+.cat-tab .cdel:hover{ opacity:1; color:var(--danger); }
+
+/* ============ 弹窗 ============ */
+.modal-mask{
+  position:fixed; inset:0; background:rgba(16,32,52,.45); backdrop-filter:blur(3px);
+  display:none; place-items:center; z-index:60; padding:20px;
+}
+.modal-mask.open{ display:grid; }
+.modal{
+  width:100%; max-width:540px; background:var(--surface); border-radius:16px;
+  box-shadow:var(--shadow-2); animation:pop .2s ease; max-height:92vh; overflow:auto;
+}
+@keyframes pop{ from{ transform:translateY(10px) scale(.98); opacity:0; } to{ transform:none; opacity:1; } }
+.modal-head{ display:flex; align-items:center; justify-content:space-between; padding:17px 22px 0; }
+.modal-head h3{ font-size:16px; font-weight:800; }
+.modal-head .x{ width:30px; height:30px; border-radius:8px; display:grid; place-items:center; color:var(--ink-faint); }
+.modal-head .x:hover{ background:var(--bg); color:var(--ink); }
+.modal-form{ padding:16px 22px 22px; display:grid; gap:14px; }
+.field label{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:6px; }
+.field label .req{ color:var(--danger); }
+.field input[type=text], .field input[type=date], .field input[type=datetime-local], .field select, .field textarea{
+  width:100%; padding:10px 13px; border:1px solid var(--line); border-radius:10px; font-size:13.5px;
+  background:#fff; transition:border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(22,119,255,.12); }
+.field textarea{ resize:vertical; min-height:64px; }
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.hint{ font-size:11.5px; color:var(--ink-faint); margin-top:5px; }
+.form-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:4px; }
+
+/* ============ Toast ============ */
+#toast{
+  position:fixed; left:50%; bottom:34px; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:#fff; font-size:13px; padding:11px 20px; border-radius:999px;
+  opacity:0; pointer-events:none; transition:all .25s; z-index:80;
+  display:flex; align-items:center; gap:8px; box-shadow:var(--shadow-2); max-width:calc(100vw - 40px);
+}
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+#toast.danger{ background:var(--danger); }
+
+/* ============ 空态 & 页脚 ============ */
+.foot{ text-align:center; font-size:11.5px; color:var(--ink-faint); margin-top:28px; }
+
+@media (max-width:640px){
+  .wrap{ padding:18px 14px 48px; }
+  .field-row{ grid-template-columns:1fr; }
+  .route-item{ min-width:132px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 顶部 -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">✓</div>
+      <div>
+        <h1>日常工作代办清单</h1>
+        <p>轻量 · 云端同步 · 多端互通</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="module-switch" id="moduleSwitch">
+        <button class="ms-btn active" data-mod="task" onclick="setModule('task')">📋 任务清单</button>
+        <button class="ms-btn" data-mod="sop" onclick="setModule('sop')">📐 SOP 流程</button>
+      </div>
+      <div class="sync-chip" id="syncChip" title="云端同步状态，点击立即同步">
+        <span class="sync-dot" id="syncDot"></span><span id="syncText">同步中…</span>
+      </div>
+      <div class="today-chip" id="todayChip"></div>
+    </div>
+  </header>
+
+  <!-- 任务清单模块 -->
+  <div id="taskModule">
+  <!-- 今日动线：智能排序签名区 -->
+  <section class="card route">
+    <div class="card-head">
+      <div>
+        <div class="route-head">
+          <span class="route-title">✨ 今日动线</span>
+        </div>
+        <div class="route-desc">按 DDL 紧急度、优先级、预计耗时与切换成本，推荐的高效完成顺序</div>
+      </div>
+      <div class="route-meta" id="routeMeta"></div>
+    </div>
+    <div class="route-body" id="routeBody"></div>
+  </section>
+
+  <!-- 主卡片 -->
+  <section class="card">
+    <div class="card-head">
+      <h2>待办清单 <span class="tag" id="listTag"></span></h2>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="view-switch">
+          <button class="vs-btn active" data-mode="list" onclick="setViewMode('list')">列表</button>
+          <button class="vs-btn" data-mode="gantt" onclick="setViewMode('gantt')">甘特图</button>
+        </div>
+        <button class="btn btn-ghost" onclick="openSortModal()">智能排序说明</button>
+        <button class="btn btn-primary" onclick="openTaskModal()">+ 新增事项</button>
+      </div>
+    </div>
+
+    <!-- 分类栏 -->
+    <div class="card-body" style="padding:14px 18px 4px;">
+      <div class="cats" id="catBar"></div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="ico">🔍</span>
+        <input id="searchInput" type="text" placeholder="搜索任务…" autocomplete="off">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="filter-group" id="statusFilters"></div>
+        <button class="btn btn-ghost" style="padding:7px 12px;font-size:12px;" onclick="toggleBatchMode()" id="batchBtn">☑ 批量删除</button>
+        <button class="btn btn-ghost" style="padding:7px 12px;font-size:12px;" onclick="exportData()">⬇ 导出备份</button>
+        <button class="btn btn-ghost" style="padding:7px 12px;font-size:12px;" onclick="document.getElementById('importFile').click()">⬆ 导入恢复</button>
+        <input type="file" id="importFile" accept=".json,application/json" style="display:none;" onchange="importData(event)">
+      </div>
+    </div>
+
+    <!-- 统计 -->
+    <div class="stats" id="statsBar"></div>
+
+    <!-- 批量操作栏 -->
+    <div class="batch-bar" id="batchBar">
+      <div class="b-count"><span id="batchCount">0</span> 项已选</div>
+      <div class="b-actions">
+        <button class="btn btn-ghost" onclick="batchSelectAll()" id="batchSelectAllBtn">全选当前列表</button>
+        <button class="btn btn-danger" onclick="batchDelete()">🗑 删除选中</button>
+        <button class="btn btn-ghost" onclick="toggleBatchMode()">取消</button>
+      </div>
+    </div>
+
+    <!-- 任务列表 -->
+    <div class="tasklist" id="taskList"></div>
+  </section>
+  </div><!-- /taskModule -->
+
+  <!-- SOP 流程模块 -->
+  <div id="sopModule" style="display:none;">
+    <section class="card">
+      <div class="card-head">
+        <h2>SOP 流程模板 <span class="tag" id="sopTag"></span></h2>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="toggleSopBatchMode()" id="sopBatchBtn">☑ 批量删除</button>
+          <button class="btn btn-primary" onclick="openSopModal()">+ 新建流程</button>
+        </div>
+      </div>
+      <div class="sop-list" id="sopList"></div>
+      <!-- SOP 批量操作栏 -->
+      <div class="batch-bar" id="sopBatchBar">
+        <div class="b-count"><span id="sopBatchCount">0</span> 项已选</div>
+        <div class="b-actions">
+          <button class="btn btn-ghost" onclick="sopBatchSelectAll()">全选当前列表</button>
+          <button class="btn btn-danger" onclick="sopBatchDelete()">🗑 删除选中</button>
+          <button class="btn btn-ghost" onclick="toggleSopBatchMode()">取消</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="footer">数据云端同步 + 本地缓存双保险 · 支持导出备份 / 导入恢复 · 点击任务右侧 📅 图标可生成日历文件，导入系统日历</div>
+</div>
+
+<!-- 任务弹窗 -->
+<div class="modal-mask" id="taskModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">新增事项</h3>
+      <button class="x" onclick="closeModal()">✕</button>
+    </div>
+    <form class="modal-form" id="taskForm" onsubmit="saveTask(event)">
+      <div class="field">
+        <label>事项名称 <span class="req">*</span></label>
+        <input type="text" id="fTitle" maxlength="60" placeholder="例如：整理周报数据" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>分类</label>
+          <select id="fCat"></select>
+        </div>
+        <div class="field">
+          <label>优先级</label>
+          <select id="fPriority">
+            <option value="1">P1 · 紧急重要</option>
+            <option value="2">P2 · 重要</option>
+            <option value="3">P3 · 一般</option>
+            <option value="4">P4 · 低</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>SOP 流程模板</label>
+        <select id="fSop" onchange="onTaskSopChange()">
+          <option value="">不使用 SOP 模板</option>
+        </select>
+        <div class="hint" id="sopTaskHint">选择 SOP 模板后，任务将按流程节点推进，可在列表中勾选当前进行到的节点</div>
+      </div>
+      <div class="field" id="sopTaskProgress" style="display:none;">
+        <label>当前进行到的节点</label>
+        <select id="fSopNodeIdx"></select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>开始时间</label>
+          <input type="datetime-local" id="fStart">
+          <div class="hint">甘特图中任务条从此时间开始（可留空）</div>
+        </div>
+        <div class="field">
+          <label>截止时间 DDL</label>
+          <input type="datetime-local" id="fDdl">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>预计耗时（分钟）</label>
+          <input type="number" id="fEst" min="5" max="600" step="5" placeholder="如 30" value="30">
+        </div>
+      </div>
+      <div class="field">
+        <label>备注</label>
+        <textarea id="fNote" rows="2" maxlength="200" placeholder="补充说明（可选）"></textarea>
+      </div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="fDdlRemind" style="width:16px;height:16px;accent-color:var(--accent);">
+          开启临期提醒（DDL 前 1 天/1 小时/10 分钟站内提示）
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">取消</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SOP 编辑弹窗 -->
+<div class="modal-mask" id="sopModal" onclick="if(event.target===this)closeSopModal()">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <h3 id="sopModalTitle">新建流程</h3>
+      <button class="x" onclick="closeSopModal()">✕</button>
+    </div>
+    <div class="modal-form" style="padding:16px 22px 22px; display:grid; gap:14px;">
+      <div class="field">
+        <label>流程名称 <span class="req">*</span></label>
+        <input type="text" id="fSopName" maxlength="40" placeholder="例如：推送发票 SOP" required>
+      </div>
+      <div class="field">
+        <label>流程节点（开始 → 中间节点 → 结束）</label>
+        <div class="sop-node-flow" style="margin-top:6px;">
+          <div class="sop-flow-node start">▶ 开始</div>
+          <div id="sopNodeList"></div>
+          <div class="sop-flow-node end">■ 结束</div>
+        </div>
+      </div>
+      <div class="field">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="fNewNodeName" maxlength="30" placeholder="节点名称，如：查询用户信息" style="flex:1;">
+          <input type="number" id="fNewNodeEst" min="1" max="600" step="5" placeholder="分钟" style="width:86px;" title="预计执行时间（分钟）">
+          <button type="button" class="btn btn-primary" style="padding:8px 14px;font-size:12.5px;" onclick="addSopNode()">+ 添加节点</button>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeSopModal()">取消</button>
+        <button type="button" class="btn btn-primary" id="sopSaveBtn" onclick="saveSop()">保存流程</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 分类管理弹窗 -->
+<div class="modal-mask" id="catModal" onclick="if(event.target===this)closeCatModal()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <h3>管理分类</h3>
+      <button class="x" onclick="closeCatModal()">✕</button>
+    </div>
+    <div class="modal-form" style="padding:16px 22px 22px; display:grid; gap:14px;">
+      <div class="field">
+        <label>新增分类</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="newCatName" maxlength="10" placeholder="如：会议、报表" style="flex:1;" onkeydown="if(event.key==='Enter')addCat()">
+          <button type="button" class="btn btn-primary" onclick="addCat()">添加</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>已有分类（点击 ✕ 删除，任务将移至“未分类”）</label>
+        <div id="catManageList" style="display:flex; flex-direction:column; gap:8px; margin-top:6px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 智能排序说明弹窗 -->
+<div class="modal-mask" id="sortModal" onclick="if(event.target===this)closeSortModal()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head">
+      <h3>智能排序 · 排序依据</h3>
+      <button class="x" onclick="closeSortModal()">✕</button>
+    </div>
+    <div class="modal-form" style="padding:16px 22px 22px; display:grid; gap:12px; font-size:13.5px; color:var(--ink-soft); line-height:1.7;">
+      <p><b style="color:var(--ink);">① 是否超时</b> —— 已过 DDL 的任务最先处理。</p>
+      <p><b style="color:var(--ink);">② 剩余时间</b> —— DDL 越近，排序越靠前（紧急度 = DDL 距今剩余时间）。</p>
+      <p><b style="color:var(--ink);">③ 优先级</b> —— P1 > P2 > P3 > P4，用于同紧迫度下的优先级排序。</p>
+      <p><b style="color:var(--ink);">④ 预计耗时</b> —— 短任务优先（快速消除待办，减少心理负担）。</p>
+      <p style="font-size:12px; color:var(--ink-faint); margin-top:4px;">计算公式：score = 紧急度得分 × 60% + 优先级得分 × 25% + 耗时得分 × 15%。按总分从高到低即最优完成顺序。动线中会单独标注 🔥 代表“今天必须完成”的高优任务。</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   数据模型 & 持久化
+   ============================================================ */
+/* ============================================================
+   数据模型 & 持久化（本地缓存 + 云端同步）
+   ============================================================ */
+const LS_KEY = 'taskboard_data_v1';
+const DEFAULT_DATA = {
+  cats: [
+    { id:'c1', name:'工作' },
+    { id:'c2', name:'生活' },
+    { id:'c3', name:'学习' }
+  ],
+  tasks: [],
+  deletedIds: [],      // 删除墓碑：跨端删除同步，防止任务“复活”
+  sops: [],            // SOP 流程模板列表
+  sopDeletedIds: []    // SOP 删除墓碑
+};
+
+/* ---------- 云同步配置（部署时填写） ----------
+ * 1. 在 supabase.com 用 GitHub 登录创建项目
+ * 2. 在 SQL Editor 执行建表语句（见说明文档）
+ * 3. 将下方两个值替换为你项目的值后保存
+ */
+const CLOUD = {
+  enabled: true,             // 已启用云端同步
+  url: 'https://jwnmbneiikwormiblzdf.supabase.co',   // Project URL
+  key: 'sb_publishable_MhMNwr2lWgGr_bRN3GYhjQ_Hvx4cftM'                // anon public key
+};
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return structuredClone(DEFAULT_DATA);
+    const d = JSON.parse(raw);
+    d.cats = Array.isArray(d.cats) ? d.cats : [];
+    d.tasks = Array.isArray(d.tasks) ? d.tasks : [];
+    d.deletedIds = Array.isArray(d.deletedIds) ? d.deletedIds : [];
+    d.sops = Array.isArray(d.sops) ? d.sops : [];
+    d.sopDeletedIds = Array.isArray(d.sopDeletedIds) ? d.sopDeletedIds : [];
+    d.tasks = d.tasks.map(t=>Object.assign({ start:null, completedAt:null, note:null, est:30, priority:3, ddl:null, remind:false, done:false, sopId:null, sopSnapshot:null, sopNodeIdx:-1 }, t));
+    return d;
+  }catch(e){ return structuredClone(DEFAULT_DATA); }
+}
+function saveData(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+  catch(e){ toast('保存失败：本地存储不可用', true); }
+  if(CLOUD.enabled) scheduleSync();
+}
+
+let data = loadData();
+if(!data.__localUpdated) data.__localUpdated = 0;
+let state = { view:'all', sort:'all', search:'', mode:'list' };
+let editingId = null;
+let batchMode = false;              // 批量删除模式
+let batchSelected = new Set();      // 批量选中的任务 id
+let sopModule = false;              // 是否处于 SOP 流程模块
+let sopBatchMode = false;           // SOP 批量删除模式
+let sopBatchSelected = new Set();   // SOP 批量选中的 id
+let editingSopId = null;            // 正在编辑的 SOP id
+/* ============================================================
+   工具函数
+   ============================================================ */
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
+}
+function fmtDateTime(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2,'0');
+  return fmtDate(iso) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function toLocalInput(d){
+  const p = n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());
+}
+function timeLeftLabel(iso){
+  if(!iso) return '';
+  const now = Date.now(), t = new Date(iso).getTime(), diff = t - now;
+  const min = Math.floor(diff/60000);
+  if(min < 0) return '已逾期';
+  if(min < 60) return min + ' 分钟后截止';
+  if(min < 1440) return Math.floor(min/60) + ' 小时后截止';
+  if(min < 2880) return '明天截止';
+  const days = Math.floor(min/1440);
+  return days + ' 天后截止';
+}
+function deadlinePill(t){
+  if(!t.ddl) return '<span class="pill deadline normal">无 DDL</span>';
+  const now = new Date(); now.setHours(0,0,0,0);
+  const d = new Date(t.ddl);
+  const dayStart = new Date(d); dayStart.setHours(0,0,0,0);
+  const diff = Math.floor((dayStart - now)/86400000);
+  let cls = 'normal', label = fmtDate(t.ddl);
+  if(new Date(t.ddl).getTime() < Date.now()){ cls='overdue'; label = fmtDate(t.ddl) + ' 已逾期'; }
+  else if(diff === 0){ cls='today'; label = fmtDate(t.ddl) + ' 今天截止'; }
+  else if(diff === 1){ cls='soon'; label = fmtDate(t.ddl) + ' 明天截止'; }
+  else if(diff <= 3){ cls='soon'; label = fmtDate(t.ddl) + ' 临期'; }
+  return '<span class="pill deadline '+cls+'">⏰ '+label+'</span>';
+}
+function catName(id){ const c = data.cats.find(x=>x.id===id); return c ? c.name : '未分类'; }
+function catColor(id){
+  const map = { c1:'#1677FF', c2:'#00A0A0', c3:'#7B61FF' };
+  if(map[id]) return map[id];
+  const c = data.cats.find(x=>x.id===id);
+  return c && c.color ? c.color : '#8A94A6';
+}
+function priorityPill(p){
+  const labels = {1:'P1 紧急',2:'P2 重要',3:'P3 一般',4:'P4 低'};
+  return '<span class="pill priority p-p'+p+'">'+labels[p]+'</span>';
+}
+
+/* ============================================================
+   今日动线（智能排序）
+   ============================================================ */
+function computeSmartOrder(tasks){
+  const now = Date.now();
+  const scored = tasks.map(t=>{
+    let urgent = 0, pri = 0, time = 0;
+    if(t.ddl){
+      const diffH = (new Date(t.ddl).getTime() - now) / 3600000;
+      if(diffH < 0) urgent = 100;
+      else if(diffH <= 6) urgent = 95;
+      else urgent = Math.max(15, 96 - diffH*0.2);
+    }
+    pri = 100 - (t.priority || 3) * 25;
+    const est = Math.min(t.est || 30, 240);
+    time = Math.max(0, 100 - (est/240)*100);
+    const score = urgent*0.6 + pri*0.25 + time*0.15;
+    return { t, score, urgent };
+  });
+  scored.sort((a,b)=> b.score - a.score);
+  return scored;
+}
+function renderRoute(){
+  const box = document.getElementById('routeBody');
+  const meta = document.getElementById('routeMeta');
+  const active = data.tasks.filter(t=>!t.done);
+  const ordered = computeSmartOrder(active);
+  const today = todayStr();
+  const todayCount = active.filter(t=> t.ddl && fmtDate(t.ddl) === today).length;
+  const overdue = active.filter(t=> t.ddl && new Date(t.ddl).getTime() < Date.now()).length;
+  meta.textContent = '今日待办 ' + active.length + ' 项 · 今日截止 ' + todayCount + ' 项 · 已逾期 ' + overdue + ' 项';
+
+  if(!active.length){
+    box.innerHTML = '<div class="route-empty">暂无待办事项，点击「+ 新增事项」开始规划今天吧。</div>';
+    return;
+  }
+  box.innerHTML = '<div class="route-list">' + ordered.map((item,i)=>{
+    const t = item.t;
+    const isToday = t.ddl && fmtDate(t.ddl) === today;
+    const hot = isToday || item.urgent >= 100;
+    const catC = catColor(t.cat);
+    return '<div class="route-item'+(hot?' hot':'')+'" title="'+escapeHtml(t.title)+'">'+
+      '<div class="route-num">'+(i+1)+'</div>'+
+      '<div class="t">'+escapeHtml(t.title)+'</div>'+
+      '<div class="s">'+ (hot?'🔥 今日优先 · ':'') + timeLeftLabel(t.ddl) + '</div>'+
+      '<div class="s" style="margin-top:2px;">'+(t.ddl ? fmtDateTime(t.ddl) : '无 DDL')+' · '+(t.est||30)+' 分钟</div>'+
+      '<div style="position:absolute; left:12px; top:0; height:3px; width:calc(100% - 24px); background:var(--line); border-radius:99px;"><div style="height:3px; width:100%; border-radius:99px; background:'+catC+';"></div></div>'+
+    '</div>';
+  }).join('') + '</div>';
+}
+
+/* ============================================================
+   渲染：分类栏 / 过滤器 / 统计 / 列表
+   ============================================================ */
+function renderCats(){
+  const bar = document.getElementById('catBar');
+  const counts = {};
+  data.tasks.forEach(t=>{ counts[t.cat||'none'] = (counts[t.cat||'none']||0)+1; });
+  let html = '<button class="cat-tab'+(state.view==='all'?' active':'')+'" onclick="setView(\'all\')">全部 <span class="n">'+data.tasks.length+'</span></button>';
+  data.cats.forEach(c=>{
+    const n = counts[c.id]||0;
+    html += '<button class="cat-tab'+(state.view===c.id?' active':'')+'" onclick="setView(\''+c.id+'\')">'+
+      '<span style="width:8px;height:8px;border-radius:99px;background:'+catColor(c.id)+';display:inline-block;"></span>'+
+      escapeHtml(c.name)+' <span class="n">'+n+'</span></button>';
+  });
+  const unc = counts['none']||0;
+  html += '<button class="cat-tab'+(state.view==='uncat'?' active':'')+'" onclick="setView(\'uncat\')">未分类 <span class="n">'+unc+'</span></button>';
+  html += '<button class="btn btn-ghost" style="padding:7px 12px; font-size:12px;" onclick="openCatModal()">⚙ 管理分类</button>';
+  bar.innerHTML = html;
+}
+function renderFilters(){
+  const box = document.getElementById('statusFilters');
+  const items = [
+    ['all','全部'],
+    ['todo','待办'],
+    ['done','已完成'],
+    ['overdue','已逾期'],
+    ['today','今日截止']
+  ];
+  box.innerHTML = items.map(it=>
+    '<button class="fbtn'+(state.sort===it[0]?' active':'')+'" onclick="setSort(\''+it[0]+'\')">'+it[1]+'</button>'
+  ).join('');
+}
+function renderStats(){
+  const box = document.getElementById('statsBar');
+  const all = data.tasks;
+  const active = all.filter(t=>!t.done);
+  const done = all.filter(t=>t.done);
+  const overdue = active.filter(t=>t.ddl && new Date(t.ddl).getTime() < Date.now());
+  const today = active.filter(t=>t.ddl && fmtDate(t.ddl) === todayStr());
+  box.innerHTML =
+    '<div class="stat"><div class="k">📋 总事项</div><div class="v">'+all.length+'</div></div>'+
+    '<div class="stat"><div class="k">🕐 进行中</div><div class="v">'+active.length+'</div></div>'+
+    '<div class="stat"><div class="k">✅ 已完成</div><div class="v">'+done.length+'</div></div>'+
+    '<div class="stat warn"><div class="k">⚠️ 已逾期</div><div class="v">'+overdue.length+'</div></div>'+
+    '<div class="stat"><div class="k">🔥 今日截止</div><div class="v">'+today.length+'</div></div>';
+}
+function getVisibleTasks(){
+  const kw = state.search.trim().toLowerCase();
+  let tasks = data.tasks.slice();
+  if(state.view === 'uncat') tasks = tasks.filter(t=>!t.cat);
+  else if(state.view !== 'all') tasks = tasks.filter(t=>t.cat === state.view);
+  if(state.sort === 'todo') tasks = tasks.filter(t=>!t.done);
+  else if(state.sort === 'done') tasks = tasks.filter(t=>t.done);
+  else if(state.sort === 'overdue') tasks = tasks.filter(t=>t.ddl && new Date(t.ddl).getTime() < Date.now() && !t.done);
+  else if(state.sort === 'today') tasks = tasks.filter(t=>t.ddl && fmtDate(t.ddl) === todayStr() && !t.done);
+  if(kw) tasks = tasks.filter(t=> t.title.toLowerCase().includes(kw) || (t.note||'').toLowerCase().includes(kw));
+  return tasks;
+}
+function renderList(){
+  const box = document.getElementById('taskList');
+  let tasks = getVisibleTasks();
+
+  // 智能顺序：先按推荐完成顺序排，已完成沉底
+  const active = tasks.filter(t=>!t.done);
+  const doneTasks = tasks.filter(t=>t.done);
+  const ordered = computeSmartOrder(active).map(x=>x.t);
+  tasks = ordered.concat(doneTasks.sort((a,b)=>(b.updated||0)-(a.updated||0)));
+
+  const tag = document.getElementById('listTag');
+  tag.textContent = tasks.length + ' 项';
+
+  if(!tasks.length){
+    box.innerHTML = '<div class="task-empty"><div class="big">🗒️</div><div class="t">没有匹配的事项</div><div class="s">换个关键词或筛选条件试试，或点击右上角「+ 新增事项」。</div></div>';
+    return;
+  }
+
+  // 按分类分组显示
+  const groups = [];
+  const grpMap = {};
+  tasks.forEach(t=>{
+    const key = t.cat || 'uncat';
+    if(!grpMap[key]){ grpMap[key] = []; groups.push(key); }
+    grpMap[key].push(t);
+  });
+
+  let html = '';
+  groups.forEach(key=>{
+    const gname = key==='uncat' ? '未分类' : catName(key);
+    const color = key==='uncat' ? '#8A94A6' : catColor(key);
+    html += '<div class="task-group"><div class="task-group-label"><span class="gbar" style="background:'+color+'"></span>'+escapeHtml(gname)+'<span class="gcount">'+grpMap[key].length+' 项</span></div>';
+    grpMap[key].forEach(t=>{ html += taskRow(t); });
+    html += '</div>';
+  });
+  box.innerHTML = html;
+}
+function taskRow(t){
+  const done = t.done;
+  const catPill = t.cat ? '<span class="pill cat">'+escapeHtml(catName(t.cat))+'</span>' : '';
+  const priPill = '<span class="pill priority p-p'+(t.priority||3)+'">'+({1:'P1',2:'P2',3:'P3',4:'P4'})[t.priority||3]+'</span>';
+  const estPill = '<span class="pill est">⏱ '+(t.est||30)+' 分钟</span>';
+  const ddlPill = deadlinePill(t);
+  const note = t.note
+    ? '<span class="pill note-pill" onclick="openNoteEditor(\''+t.id+'\')" title="点击编辑备注">📝 '+esc(t.note)+'</span>'
+    : '<span class="pill note-pill" onclick="openNoteEditor(\''+t.id+'\')" style="opacity:.5;" title="点击添加备注">📝 添加备注</span>';
+  // SOP 进度胶囊：点击切换当前进行到的流程节点
+  let sopPill = '';
+  if(t.sopId || t.sopSnapshot){
+    const sName = (t.sopSnapshot && t.sopSnapshot.name) || (t.sopId ? (data.sops.find(s=>s.id===t.sopId)||{}).name : '') || 'SOP';
+    const nodes = (t.sopSnapshot && t.sopSnapshot.nodes) || (t.sopId ? ((data.sops.find(s=>s.id===t.sopId)||{}).nodes||[]) : []);
+    const cur = (t.sopNodeIdx>=0 && t.sopNodeIdx<nodes.length) ? t.sopNodeIdx : -1;
+    const curName = cur>=0 ? nodes[cur].name : '未开始';
+    const allDone = cur>=0 && cur===nodes.length-1 && nodes.length>0;
+    sopPill = '<span class="pill sop-progress-pill" onclick="toggleSopPicker(\''+t.id+'\')" title="点击选择当前进行到的流程节点">'+
+      (allDone ? '🏁 ' : '📋 ')+escapeHtml(sName)+' · '+escapeHtml(curName)+'</span>';
+  }
+  const isSel = batchSelected.has(t.id);
+  const check = batchMode
+    ? '<button class="batch-check'+(isSel?' sel':'')+'" onclick="toggleBatchSelect(\''+t.id+'\')" aria-label="选择">'+(isSel?'✓':'')+'</button>'
+    : '<button class="task-check'+(done?' checked':'')+'" onclick="toggleDone(\''+t.id+'\')" aria-label="完成">'+(done?'✓':'')+'</button>';
+  return '<div class="task-row'+(done?' done':'')+(batchMode&&isSel?' sel':'')+'">'+
+    check+
+    '<div class="task-main">'+
+      '<div class="task-title">'+esc(t.title)+'</div>'+
+      '<div class="task-sub">'+catPill+priPill+estPill+ddlPill+note+sopPill+'</div>'+
+      '<div class="sop-picker" id="sopPick-'+t.id+'" style="display:none;margin-top:8px;"></div>'+
+    '</div>'+
+    '<div class="task-ops">'+
+      '<button class="op" title="同步到日历" onclick="syncCalendar(\''+t.id+'\')">📅</button>'+
+      '<button class="op" title="编辑" onclick="openTaskModal(\''+t.id+'\')">✏️</button>'+
+      '<button class="op danger" title="删除" onclick="deleteTask(\''+t.id+'\')">🗑</button>'+
+    '</div>'+
+  '</div>'+
+  '<div class="note-editor" id="noteEd-'+t.id+'" style="display:none;margin:0 12px 6px;">'+
+    '<textarea id="noteTa-'+t.id+'" maxlength="200" placeholder="给任务添加备注…">'+esc(t.note||'')+'</textarea>'+
+    '<div class="note-editor-actions">'+
+      '<button type="button" class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="closeNoteEditor(\''+t.id+'\')">取消</button>'+
+      '<button type="button" class="btn btn-primary" style="padding:5px 12px;font-size:12px;" onclick="saveNote(\''+t.id+'\')">保存备注</button>'+
+    '</div>'+
+  '</div>';
+}
+
+/* ============================================================
+   任务 SOP 进度：展开节点选择器 / 切换当前节点
+   ============================================================ */
+function toggleSopPicker(id){
+  const box = document.getElementById('sopPick-'+id);
+  if(!box) return;
+  const showing = box.style.display !== 'none';
+  // 收起其他已展开的
+  document.querySelectorAll('.sop-picker').forEach(el=>{ el.style.display = 'none'; });
+  if(showing){ return; }
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t) return;
+  const s = t.sopId ? data.sops.find(x=>x.id===t.sopId) : null;
+  const nodes = (t.sopSnapshot && t.sopSnapshot.nodes) || (s && s.nodes) || [];
+  const cur = (t.sopNodeIdx>=0 && t.sopNodeIdx<nodes.length) ? t.sopNodeIdx : -1;
+  box.innerHTML = '<div class="sop-picker-title">📋 '+escapeHtml((t.sopSnapshot&&t.sopSnapshot.name)||(s&&s.name)||'SOP 流程')+' · 当前进行到的节点</div>'+
+    '<div class="sop-picker-nodes">'+
+      '<button class="sop-pick-item'+(cur===-1?' cur':'')+'" onclick="setSopNode(\''+id+'\',-1)"><span class="pi">0</span>尚未开始（准备中）</button>'+
+      nodes.map((n,i)=>'<button class="sop-pick-item'+(cur===i?' cur':'')+'" onclick="setSopNode(\''+id+'\','+i+')"><span class="pi">'+(i+1)+'</span>'+escapeHtml(n.name)+(n.est?' <span style="opacity:.65;font-family:var(--mono);font-size:11px;">'+n.est+'′</span>':'')+'</button>').join('')+
+    '</div>';
+  box.style.display = '';
+}
+function setSopNode(id, idx){
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.sopNodeIdx = +idx;
+  t.updated = Date.now();
+  saveData(); renderView();
+  toast(idx===-1 ? '已重置为「尚未开始」' : '已切换到节点「'+(((t.sopSnapshot&&t.sopSnapshot.nodes)||(t.sopId?((data.sops.find(s=>s.id===t.sopId)||{}).nodes||[]):[]))[idx]||{}).name+'」');
+}
+
+/* ============================================================
+   甘特图视图
+   ============================================================ */
+const GANTT_DAY_W = 72;
+function renderGantt(){
+  const box = document.getElementById('taskList');
+  const tag = document.getElementById('listTag');
+  const now = new Date();
+  const DAY = 86400000;
+  const DAY_W = GANTT_DAY_W;
+  const ROW_H = 42;
+  const estMs = t => (t.est||30)*60000;
+  const xPos = ts => Math.round((new Date(ts).getTime() - dayStart.getTime())/DAY*DAY_W);
+
+  let tasks = getVisibleTasks();
+  tag.textContent = tasks.length + ' 项';
+
+  const legend = '<div class="gantt-legend">'+
+    '<span><i style="background:linear-gradient(135deg,#3E9BFF,#1677FF)"></i>进行中</span>'+
+    '<span><i style="background:linear-gradient(135deg,#2BC48F,#00A56C)"></i>已完成</span>'+
+    '<span><i style="background:linear-gradient(135deg,#FF6B6B,#E64545)"></i>执行超时 / 已逾期</span>'+
+    '<span><i class="now-i"></i>现在</span></div>';
+
+  if(!tasks.length){
+    box.innerHTML = legend + '<div class="gantt-empty">暂无任务<br>点击「+ 新增事项」添加任务，并在编辑弹窗中填写「开始时间 / 截止时间」以查看时间线</div>';
+    return;
+  }
+
+  // 计算每条任务的时间端点
+  const spans = tasks.map(t=>{
+    const s = t.start ? new Date(t.start) : null;
+    const e = t.ddl ? new Date(t.ddl) : (s ? new Date(s.getTime()+estMs(t)) : null);
+    return { t, s, e };
+  });
+  let minT = now, maxT = now;
+  spans.forEach(x=>{
+    [x.s, x.e].forEach(v=>{ if(v){ if(v<minT) minT=v; if(v>maxT) maxT=v; } });
+  });
+  const dayStart = new Date(Math.min(minT.getTime(), now.getTime())); dayStart.setHours(0,0,0,0); dayStart.setDate(dayStart.getDate()-1);
+  const dayEnd = new Date(Math.max(maxT.getTime(), now.getTime())); dayEnd.setHours(0,0,0,0); dayEnd.setDate(dayEnd.getDate()+1);
+  const days = Math.max(7, Math.round((dayEnd - dayStart)/DAY));
+  const totalW = days*DAY_W;
+
+  let thead = '';
+  for(let i=0;i<days;i++){
+    const d = new Date(dayStart.getTime()+i*DAY);
+    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const isT = ds === todayStr();
+    thead += '<div class="gantt-day'+(isT?' today':'')+'" style="width:'+DAY_W+'px;padding-top:7px;line-height:1.35;">'+(d.getMonth()+1)+'/'+d.getDate()+'<br><span style="opacity:.72;font-weight:400;">周'+['日','一','二','三','四','五','六'][d.getDay()]+'</span></div>';
+  }
+  let grid = '';
+  for(let i=0;i<=days;i++) grid += '<div class="gline" style="left:'+(i*DAY_W)+'px;"></div>';
+  grid += '<div class="gline today-line" style="left:'+xPos(now)+'px;"></div>';
+
+  let labels = '<div class="gantt-lhead">任务 / 状态</div>';
+  let barsHtml = '';
+  spans.forEach((sp, idx)=>{
+    const t = sp.t;
+    const isDone = !!t.done;
+    const est = estMs(t);
+    const overdue = !isDone && t.ddl && new Date(t.ddl).getTime() < now.getTime();
+    const overlong = isDone && t.completedAt && t.start && (new Date(t.completedAt).getTime() - new Date(t.start).getTime()) > est*2;
+    let stLabel = isDone ? '已完成' : (overdue ? '已逾期' : '进行中');
+    let stCls = isDone ? 'done-s' : (overdue ? 'long' : '');
+    if(overlong){ stLabel = '执行超时'; stCls = 'long'; }
+    labels += '<div class="gantt-lrow" style="height:'+ROW_H+'px;"><div class="lname">'+esc(t.title)+'</div>'+
+      '<div class="lmeta"><span class="lstate '+stCls+'">'+stLabel+'</span> · '+(t.est||30)+' 分钟'+(sp.s ? ' · '+fmtDateTime(t.start) : '')+'</div></div>';
+
+    const s = sp.s ? new Date(sp.s) : (t.ddl ? new Date(new Date(t.ddl).getTime() - est) : null);
+    let e = sp.e ? new Date(sp.e) : null;
+    if(isDone && t.completedAt) e = new Date(t.completedAt);
+    if(s && e && e.getTime() > s.getTime()){
+      const cls = isDone ? (overlong ? ' overlong' : ' done') : (overdue ? ' overlong' : '');
+      const left = xPos(s);
+      const w = Math.max(10, xPos(e) - left);
+      barsHtml += '<div class="gantt-bar'+cls+'" style="left:'+left+'px;width:'+w+'px;top:'+(idx*ROW_H+8)+'px;" title="'+esc(t.title)+'" onclick="openTaskModal(\''+t.id+'\')"><span class="bname">'+esc(t.title)+'</span></div>';
+    }
+    barsHtml += '<div class="gantt-row" style="left:0;top:'+(idx*ROW_H)+'px;width:'+totalW+'px;height:'+ROW_H+'px;position:absolute;"></div>';
+  });
+
+  box.innerHTML = legend +
+    '<div class="gantt-wrap">'+
+      '<div class="gantt-labels">'+labels+'</div>'+
+      '<div class="gantt-timeline"><div style="width:'+totalW+'px;">'+
+        '<div class="gantt-thead">'+thead+'</div>'+
+        '<div class="gantt-body" style="width:'+totalW+'px;height:'+(tasks.length*ROW_H)+'px;">'+grid+barsHtml+'</div>'+
+      '</div></div>'+
+    '</div>';
+}
+
+/* ============================================================
+   行内备注
+   ============================================================ */
+function openNoteEditor(id){
+  const ed = document.getElementById('noteEd-'+id);
+  if(!ed) return;
+  ed.style.display = 'grid';
+  const ta = document.getElementById('noteTa-'+id);
+  if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+}
+function closeNoteEditor(id){
+  const ed = document.getElementById('noteEd-'+id);
+  if(ed) ed.style.display = 'none';
+}
+function saveNote(id){
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t) return;
+  const v = document.getElementById('noteTa-'+id).value.trim();
+  t.note = v || null;
+  t.updated = Date.now();
+  saveData(); renderAll();
+  toast(v ? '备注已保存' : '备注已清空');
+}
+
+/* ============================================================
+   增删改
+   ============================================================ */
+function openTaskModal(id){
+  const m = document.getElementById('taskModal');
+  document.getElementById('taskForm').reset();
+  // 填充分类选项
+  const sel = document.getElementById('fCat');
+  sel.innerHTML = '<option value="">未分类</option>' + data.cats.map(c=>'<option value="'+c.id+'">'+escapeHtml(c.name)+'</option>').join('');
+  // 填充 SOP 模板选项
+  const sopSel = document.getElementById('fSop');
+  sopSel.innerHTML = '<option value="">不使用 SOP 模板</option>' + data.sops.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('');
+  const nodeSel = document.getElementById('fSopNodeIdx');
+  nodeSel.innerHTML = '';
+  document.getElementById('sopTaskProgress').style.display = 'none';
+  if(id){
+    const t = data.tasks.find(x=>x.id===id);
+    document.getElementById('fTitle').value = t.title;
+    sel.value = t.cat || '';
+    document.getElementById('fPriority').value = t.priority || 3;
+    document.getElementById('fDdl').value = t.ddl ? t.ddl.slice(0,16) : '';
+    document.getElementById('fStart').value = t.start ? t.start.slice(0,16) : '';
+    document.getElementById('fEst').value = t.est || 30;
+    document.getElementById('fNote').value = t.note || '';
+    document.getElementById('fDdlRemind').checked = !!t.remind;
+    document.getElementById('saveBtn').textContent = '保存修改';
+    document.getElementById('modalTitle').textContent = '编辑事项';
+    editingId = t.id;
+    // SOP 回填：优先用模板当前节点，若模板已删则用快照
+    if(t.sopId && data.sops.find(s=>s.id===t.sopId)){
+      sopSel.value = t.sopId;
+      onTaskSopChange(t.sopNodeIdx, t.sopSnapshot);
+    }else if(t.sopSnapshot){
+      // 模板已删，仍展示快照进度
+      sopSel.value = '';
+      document.getElementById('sopTaskProgress').style.display = '';
+      const snapNodes = (t.sopSnapshot.nodes||[]);
+      nodeSel.innerHTML = snapNodes.map((n,i)=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(n.name)+'</option>').join('');
+      nodeSel.value = (t.sopNodeIdx>=0 && t.sopNodeIdx<snapNodes.length) ? t.sopNodeIdx : -1;
+      document.getElementById('sopTaskHint').textContent = '该任务引用模板已删除，当前按保存时的快照展示进度';
+    }
+  }else{
+    editingId = null;
+    document.getElementById('fDdlRemind').checked = true;
+    document.getElementById('saveBtn').textContent = '保存';
+    document.getElementById('modalTitle').textContent = '新增事项';
+  }
+  m.classList.add('open');
+  document.getElementById('fTitle').focus();
+}
+function closeModal(){ document.getElementById('taskModal').classList.remove('open'); }
+function onTaskSopChange(){
+  const sopSel = document.getElementById('fSop');
+  const sid = sopSel.value;
+  const nodeSel = document.getElementById('fSopNodeIdx');
+  const progBox = document.getElementById('sopTaskProgress');
+  const hint = document.getElementById('sopTaskHint');
+  if(!sid){
+    progBox.style.display = 'none';
+    hint.textContent = '选择 SOP 模板后，任务将按流程节点推进，可在列表中勾选当前进行到的节点';
+    return;
+  }
+  const s = data.sops.find(x=>x.id===sid);
+  const nodes = (s && s.nodes) || [];
+  nodeSel.innerHTML = '<option value="-1">尚未开始（准备中）</option>' + nodes.map((n,i)=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(n.name)+'</option>').join('');
+  nodeSel.value = -1;
+  progBox.style.display = '';
+  hint.textContent = '共 '+nodes.length+' 个中间节点 · 保存后可在任务列表中点击进度胶囊快速更新';
+}
+function saveTask(e){
+  e.preventDefault();
+  const title = document.getElementById('fTitle').value.trim();
+  if(!title){ toast('请填写事项名称', true); return; }
+  const sopId = document.getElementById('fSop').value || null;
+  const sopNodeIdx = +document.getElementById('fSopNodeIdx').value;
+  let sopSnapshot = null;
+  if(sopId){
+    const s = data.sops.find(x=>x.id===sopId);
+    if(s) sopSnapshot = { name: s.name, nodes: JSON.parse(JSON.stringify(s.nodes||[])) };
+  }
+  const obj = {
+    title,
+    cat: document.getElementById('fCat').value || null,
+    priority: +document.getElementById('fPriority').value,
+    ddl: document.getElementById('fDdl').value || null,
+    start: document.getElementById('fStart').value || null,
+    est: +document.getElementById('fEst').value || 30,
+    note: document.getElementById('fNote').value.trim() || null,
+    remind: document.getElementById('fDdlRemind').checked,
+    sopId,
+    sopSnapshot,
+    sopNodeIdx: sopId ? (sopNodeIdx>=0 ? sopNodeIdx : -1) : -1
+  };
+  if(editingId){
+    const t = data.tasks.find(x=>x.id===editingId);
+    Object.assign(t, obj);
+    t.updated = Date.now();
+    toast('已保存修改');
+  }else{
+    obj.id = uid();
+    obj.done = false;
+    obj.created = Date.now();
+    obj.updated = Date.now();
+    data.tasks.push(obj);
+    toast('已添加「'+title+'」');
+  }
+  saveData(); closeModal(); renderAll();
+}
+function toggleDone(id){
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.done = !t.done;
+  if(t.done) t.completedAt = new Date().toISOString();
+  else delete t.completedAt;
+  t.updated = Date.now();
+  saveData(); renderAll();
+}
+function deleteTask(id){
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t) return;
+  if(!confirm('确定删除「'+t.title+'」吗？')){
+    return;
+  }
+  data.tasks = data.tasks.filter(x=>x.id!==id);
+  if(!data.deletedIds.includes(id)) data.deletedIds.push(id);  // 写入删除墓碑，确保云端/另一端不再复活
+  data.__localUpdated = Date.now();
+  saveData(); renderAll();
+  toast('已删除「'+t.title+'」');
+}
+
+/* ============================================================
+   批量删除
+   ============================================================ */
+function toggleBatchMode(){
+  batchMode = !batchMode;
+  if(!batchMode){ batchSelected.clear(); }
+  const bar = document.getElementById('batchBar');
+  const btn = document.getElementById('batchBtn');
+  if(bar) bar.classList.toggle('show', batchMode);
+  if(btn) btn.classList.toggle('active', batchMode);
+  renderView();
+  renderBatchCount();
+}
+function toggleBatchSelect(id){
+  if(batchSelected.has(id)) batchSelected.delete(id);
+  else batchSelected.add(id);
+  renderView();
+  renderBatchCount();
+}
+function batchSelectAll(){
+  // 选中当前筛选/视图下可见的全部任务
+  getVisibleTasks().forEach(t=> batchSelected.add(t.id));
+  renderView();
+  renderBatchCount();
+}
+function renderBatchCount(){
+  const c = document.getElementById('batchCount');
+  if(c) c.textContent = batchSelected.size;
+}
+function batchDelete(){
+  if(!batchSelected.size){ toast('请先勾选要删除的任务', true); return; }
+  const titles = data.tasks.filter(t=>batchSelected.has(t.id)).map(t=>t.title);
+  if(!confirm('确定删除选中的 '+batchSelected.size+' 项任务吗？\n\n'+titles.slice(0,8).join('、')+(titles.length>8?' 等':'')+'\n\n此操作不可恢复，且会同步到云端/其他设备。')){
+    return;
+  }
+  let n = 0;
+  data.tasks = data.tasks.filter(t=>{
+    if(batchSelected.has(t.id)){
+      if(!data.deletedIds.includes(t.id)) data.deletedIds.push(t.id);  // 墓碑同步
+      n++;
+      return false;
+    }
+    return true;
+  });
+  data.__localUpdated = Date.now();
+  batchSelected.clear();
+  saveData(); renderAll();
+  if(batchMode) toggleBatchMode();  // 删除完成后自动退出批量模式
+  toast('已批量删除 '+n+' 项任务');
+}
+
+/* ============================================================
+   分类管理
+   ============================================================ */
+function openCatModal(){
+  const m = document.getElementById('catModal');
+  m.classList.add('open');
+  document.getElementById('newCatName').focus();
+  renderCatManage();
+}
+function closeCatModal(){ document.getElementById('catModal').classList.remove('open'); }
+function renderCatManage(){
+  const box = document.getElementById('catManageList');
+  box.innerHTML = data.cats.map(c=>{
+    const used = data.tasks.filter(t=>t.cat===c.id).length;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--line);border-radius:10px;">'+
+      '<span style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;"><span style="width:9px;height:9px;border-radius:99px;background:'+catColor(c.id)+';"></span>'+escapeHtml(c.name)+'<span style="font-size:11px;color:var(--ink-faint);font-family:var(--mono);">'+used+' 项</span></span>'+
+      '<button class="op danger" onclick="deleteCat(\''+c.id+'\')" title="删除分类">✕</button>'+
+    '</div>';
+  }).join('');
+  if(!data.cats.length) box.innerHTML = '<div style="font-size:12.5px;color:var(--ink-faint);">暂无分类，请添加。</div>';
+}
+function addCat(){
+  const name = document.getElementById('newCatName').value.trim();
+  if(!name){ toast('请输入分类名称', true); return; }
+  if(data.cats.some(c=>c.name===name)){ toast('该分类已存在', true); return; }
+  data.cats.push({ id: uid(), name });
+  document.getElementById('newCatName').value = '';
+  saveData(); renderCatManage(); renderCats();
+  toast('已添加分类「'+name+'」');
+}
+function deleteCat(id){
+  if(!confirm('删除该分类后，其中的任务将移入「未分类」，确定删除吗？')) return;
+  data.cats = data.cats.filter(c=>c.id!==id);
+  data.tasks.forEach(t=>{ if(t.cat===id) t.cat = null; });
+  saveData(); renderCatManage(); renderCats(); renderView();
+  toast('已删除分类');
+}
+
+/* ============================================================
+   SOP 流程管理
+   ============================================================ */
+let sopEditingNodes = [];  // 编辑弹窗中的节点临时数组
+
+function openSopModal(id){
+  const m = document.getElementById('sopModal');
+  document.getElementById('fSopName').value = '';
+  editingSopId = id || null;
+  sopEditingNodeIdx = -1;  // 重置节点编辑态
+  if(id){
+    const s = data.sops.find(x=>x.id===id);
+    document.getElementById('fSopName').value = s.name;
+    sopEditingNodes = JSON.parse(JSON.stringify(s.nodes || []));
+    document.getElementById('sopModalTitle').textContent = '编辑流程';
+    document.getElementById('sopSaveBtn').textContent = '保存修改';
+  }else{
+    sopEditingNodes = [];
+    document.getElementById('sopModalTitle').textContent = '新建流程';
+    document.getElementById('sopSaveBtn').textContent = '保存流程';
+  }
+  renderSopNodes();
+  m.classList.add('open');
+  document.getElementById('fSopName').focus();
+}
+function closeSopModal(){ document.getElementById('sopModal').classList.remove('open'); }
+function renderSopNodes(){
+  const box = document.getElementById('sopNodeList');
+  box.innerHTML = sopEditingNodes.map((n,i)=>{
+    // 编辑态：行内表单修改名称与预计分钟数
+    if(sopEditingNodeIdx === i){
+      return '<div class="sop-node-row editing">'+
+        '<span class="sop-node-idx">'+(i+1)+'</span>'+
+        '<div class="sop-node-edit-form">'+
+          '<input type="text" id="sopEditName" maxlength="30" value="'+esc(n.name)+'" placeholder="节点名称">'+
+          '<input type="number" id="sopEditEst" min="1" max="600" step="5" placeholder="分钟" value="'+(n.est||'')+'" title="预计执行时间（分钟）">'+
+          '<button type="button" class="mini-btn ok" onclick="saveSopNode('+i+')">保存</button>'+
+          '<button type="button" class="mini-btn" onclick="cancelSopNodeEdit()">取消</button>'+
+        '</div>'+
+      '</div>';
+    }
+    // 展示态：名称 + 预计时间 + 编辑/上移/下移/删除
+    return '<div class="sop-node-row">'+
+      '<span class="sop-node-idx">'+(i+1)+'</span>'+
+      '<div class="sop-node-body">'+
+        '<div class="sop-node-name">'+esc(n.name)+'</div>'+
+        '<div class="sop-node-meta">'+(n.est? n.est+' 分钟':'预计时间未设置')+'</div>'+
+      '</div>'+
+      '<div class="sop-node-ops">'+
+        '<button type="button" class="op" onclick="editSopNode('+i+')" title="编辑节点">✏️</button>'+
+        '<button type="button" class="op" onclick="moveSopNode('+i+',-1)" title="上移"'+(i===0?' disabled style="opacity:.35;cursor:not-allowed;"':'')+'>↑</button>'+
+        '<button type="button" class="op" onclick="moveSopNode('+i+',1)" title="下移"'+(i===sopEditingNodes.length-1?' disabled style="opacity:.35;cursor:not-allowed;"':'')+'>↓</button>'+
+        '<button type="button" class="op danger" onclick="removeSopNode('+i+')" title="删除节点">✕</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  if(!sopEditingNodes.length) box.innerHTML = '<div style="font-size:12px;color:var(--ink-faint);padding:6px 0;">暂无中间节点，可在下方添加</div>';
+}
+let sopEditingNodeIdx = -1;  // 正在编辑的节点下标（-1 表示无）
+function editSopNode(i){
+  sopEditingNodeIdx = i;
+  renderSopNodes();
+}
+function saveSopNode(i){
+  const name = document.getElementById('sopEditName').value.trim();
+  if(!name){ toast('节点名称不能为空', true); return; }
+  const est = +document.getElementById('sopEditEst').value || null;
+  sopEditingNodes[i].name = name;
+  sopEditingNodes[i].est = est;
+  sopEditingNodeIdx = -1;
+  renderSopNodes();
+  toast('节点已更新');
+}
+function cancelSopNodeEdit(){
+  sopEditingNodeIdx = -1;
+  renderSopNodes();
+}
+function moveSopNode(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= sopEditingNodes.length) return;
+  const tmp = sopEditingNodes[i];
+  sopEditingNodes[i] = sopEditingNodes[j];
+  sopEditingNodes[j] = tmp;
+  // 若正在编辑被移动的节点，保持编辑该节点（跟随移动）
+  if(sopEditingNodeIdx === i) sopEditingNodeIdx = j;
+  else if(sopEditingNodeIdx === j) sopEditingNodeIdx = i;
+  renderSopNodes();
+}
+function addSopNode(){
+  const name = document.getElementById('fNewNodeName').value.trim();
+  const est = +document.getElementById('fNewNodeEst').value || null;
+  if(!name){ toast('请输入节点名称', true); return; }
+  sopEditingNodes.push({ id: uid(), name, est });
+  document.getElementById('fNewNodeName').value = '';
+  document.getElementById('fNewNodeEst').value = '';
+  renderSopNodes();
+  document.getElementById('fNewNodeName').focus();
+}
+function removeSopNode(i){
+  sopEditingNodes.splice(i, 1);
+  renderSopNodes();
+}
+function saveSop(){
+  const name = document.getElementById('fSopName').value.trim();
+  if(!name){ toast('请输入流程名称', true); return; }
+  if(editingSopId){
+    const s = data.sops.find(x=>x.id===editingSopId);
+    s.name = name;
+    s.nodes = sopEditingNodes;
+    s.updated = Date.now();
+    // 同步更新引用该 SOP 的任务快照（节点变更时任务进度可能越界，做保护）
+    data.tasks.forEach(t=>{
+      if(t.sopId === s.id && t.sopSnapshot){
+        t.sopSnapshot = { name: s.name, nodes: JSON.parse(JSON.stringify(s.nodes)) };
+        if(t.sopNodeIdx >= s.nodes.length) t.sopNodeIdx = s.nodes.length - 1;
+      }
+    });
+    toast('已保存流程修改');
+  }else{
+    data.sops.push({ id: uid(), name, nodes: sopEditingNodes, created: Date.now(), updated: Date.now() });
+    toast('已创建流程「'+name+'」');
+  }
+  saveData(); renderSops(); closeSopModal();
+}
+function deleteSop(id){
+  const s = data.sops.find(x=>x.id===id);
+  if(!s) return;
+  const used = data.tasks.filter(t=>t.sopId===id).length;
+  if(!confirm('确定删除流程「'+s.name+'」吗？'+(used?'\n\n注意：有 '+used+' 个任务正在引用该流程，删除后这些任务将保留当前快照但不再关联模板。':''))) return;
+  data.sops = data.sops.filter(x=>x.id!==id);
+  if(!data.sopDeletedIds.includes(id)) data.sopDeletedIds.push(id);
+  // 引用任务保留快照但解除模板关联
+  data.tasks.forEach(t=>{ if(t.sopId===id) t.sopId = null; });
+  data.__localUpdated = Date.now();
+  saveData(); renderSops();
+  toast('已删除流程「'+s.name+'」');
+}
+
+/* SOP 批量删除 */
+function toggleSopBatchMode(){
+  sopBatchMode = !sopBatchMode;
+  if(!sopBatchMode) sopBatchSelected.clear();
+  const bar = document.getElementById('sopBatchBar');
+  const btn = document.getElementById('sopBatchBtn');
+  if(bar) bar.classList.toggle('show', sopBatchMode);
+  if(btn) btn.classList.toggle('active', sopBatchMode);
+  renderSops();
+  renderSopBatchCount();
+}
+function toggleSopBatchSelect(id){
+  if(sopBatchSelected.has(id)) sopBatchSelected.delete(id);
+  else sopBatchSelected.add(id);
+  renderSops();
+  renderSopBatchCount();
+}
+function sopBatchSelectAll(){
+  data.sops.forEach(s=> sopBatchSelected.add(s.id));
+  renderSops();
+  renderSopBatchCount();
+}
+function renderSopBatchCount(){
+  const c = document.getElementById('sopBatchCount');
+  if(c) c.textContent = sopBatchSelected.size;
+}
+function sopBatchDelete(){
+  if(!sopBatchSelected.size){ toast('请先勾选要删除的流程', true); return; }
+  const names = data.sops.filter(s=>sopBatchSelected.has(s.id)).map(s=>s.name);
+  if(!confirm('确定删除选中的 '+sopBatchSelected.size+' 个流程吗？\n\n'+names.slice(0,8).join('、')+(names.length>8?' 等':'')+'\n\n引用这些流程的任务将保留当前快照。')) return;
+  let n = 0;
+  data.sops = data.sops.filter(s=>{
+    if(sopBatchSelected.has(s.id)){
+      if(!data.sopDeletedIds.includes(s.id)) data.sopDeletedIds.push(s.id);
+      data.tasks.forEach(t=>{ if(t.sopId===s.id) t.sopId = null; });
+      n++;
+      return false;
+    }
+    return true;
+  });
+  data.__localUpdated = Date.now();
+  sopBatchSelected.clear();
+  saveData(); renderSops();
+  if(sopBatchMode) toggleSopBatchMode();
+  toast('已批量删除 '+n+' 个流程');
+}
+
+/* ============================================================
+   日历同步 / 临期提醒
+   ============================================================ */
+function syncCalendar(id){
+  const t = data.tasks.find(x=>x.id===id);
+  if(!t) return;
+  if(!t.ddl){ toast('该任务未设置 DDL，无法同步日历', true); return; }
+  // 生成标准 .ics 日历文件：下载后双击/打开即可导入系统日历（手机/电脑通用）
+  const start = new Date(t.ddl);
+  const end = new Date(start.getTime() + (t.est||30)*60000);
+  const fmtIcs = d=> d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const safe = s=> String(s==null?'':s).replace(/[;,\\n]/g, m=> m==='\n' ? '\\n' : '\\'+m);
+  const safeTitle = safe;
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//TaskBoard//CN',
+    'BEGIN:VEVENT',
+    'UID:'+t.id+'@taskboard',
+    'DTSTAMP:'+fmtIcs(new Date()),
+    'DTSTART:'+fmtIcs(start),
+    'DTEND:'+fmtIcs(end),
+    'SUMMARY:'+safeTitle(t.title),
+    'DESCRIPTION:'+safeTitle(t.note||''),
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '任务-'+t.title+'.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('已生成日历文件，打开后即可导入系统日历');
+}
+function checkReminders(){
+  const now = Date.now();
+  data.tasks.forEach(t=>{
+    if(!t.ddl || t.done || !t.remind) return;
+    const diffMs = new Date(t.ddl).getTime() - now;
+    if(diffMs < 0) return;
+    const last = t.__lastWarned || 0;
+    [10,60,1440].forEach(w=>{
+      const ws = w*60000;
+      if(diffMs <= ws && diffMs > ws - 10*60000 && last < now - ws){
+        toast('⏰ 临期提醒：'+ t.title + '（' + timeLeftLabel(t.ddl) + '）');
+        t.__lastWarned = now;
+        saveData();
+      }
+    });
+  });
+}
+
+
+function setViewMode(mode){
+  state.mode = mode;
+  document.querySelectorAll('.vs-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+  if(mode==='gantt' && batchMode) toggleBatchMode();  // 甘特图视图退出批量模式
+  renderAll();
+}
+function renderView(){ if(state.mode==='gantt') renderGantt(); else renderList(); }
+function setView(v){ state.view = v; renderCats(); renderView(); }
+function setSort(s){ state.sort = s; renderFilters(); renderView(); }
+function openSortModal(){ document.getElementById('sortModal').classList.add('open'); }
+function closeSortModal(){ document.getElementById('sortModal').classList.remove('open'); }
+function renderAll(){
+  renderRoute();
+  renderCats();
+  renderFilters();
+  renderStats();
+  renderView();
+  renderBatchCount();
+  // 批量模式下若列表为空自动退出
+  if(batchMode && !getVisibleTasks().length) toggleBatchMode();
+}
+
+/* ============================================================
+   模块切换
+   ============================================================ */
+function setModule(mod){
+  sopModule = (mod === 'sop');
+  document.querySelectorAll('.ms-btn').forEach(b=>b.classList.toggle('active', b.dataset.mod===mod));
+  document.getElementById('taskModule').style.display = sopModule ? 'none' : '';
+  document.getElementById('sopModule').style.display = sopModule ? '' : 'none';
+  if(sopModule){
+    if(batchMode) toggleBatchMode();
+    renderSops();
+  }else{
+    if(sopBatchMode) toggleSopBatchMode();
+    renderAll();
+  }
+}
+
+/* ============================================================
+   SOP 流程模板
+   ============================================================ */
+function renderSops(){
+  const box = document.getElementById('sopList');
+  const tag = document.getElementById('sopTag');
+  const sops = data.sops.slice();
+  tag.textContent = sops.length + ' 个流程';
+  if(!sops.length){
+    box.innerHTML = '<div class="sop-empty"><div class="big">📐</div>暂无 SOP 流程<br>点击「+ 新建流程」创建标准作业流程模板</div>';
+    return;
+  }
+  box.innerHTML = sops.map(s=>{
+    const nodes = Array.isArray(s.nodes) ? s.nodes : [];
+    const used = data.tasks.filter(t=>t.sopId===s.id).length;
+    const isSel = sopBatchSelected.has(s.id);
+    const flow = '<span class="sop-flow-node start">▶ 开始</span>'+
+      nodes.map(n=>'<span class="sop-flow-node">'+escapeHtml(n.name)+(n.est?' <span class="est">'+n.est+'′</span>':'')+'</span>').join('<span class="sop-flow-arrow">→</span>')+
+      (nodes.length?'<span class="sop-flow-arrow">→</span>':'<span class="sop-flow-arrow">→</span>')+
+      '<span class="sop-flow-node end">■ 结束</span>';
+    const check = sopBatchMode
+      ? '<span class="sop-check'+(isSel?' sel':'')+'" onclick="toggleSopBatchSelect(\''+s.id+'\')">'+(isSel?'✓':'')+'</span>'
+      : '';
+    return '<div class="sop-card'+(sopBatchMode&&isSel?' sel':'')+'">'+
+      '<div class="sop-head">'+check+
+        '<span class="sop-name">'+escapeHtml(s.name)+'</span>'+
+        '<span class="sop-node-count">'+nodes.length+' 个节点 · 被 '+used+' 个任务引用</span>'+
+        '<div class="sop-ops">'+
+          '<button class="op" title="编辑" onclick="openSopModal(\''+s.id+'\')">✏️</button>'+
+          '<button class="op danger" title="删除" onclick="deleteSop(\''+s.id+'\')">🗑</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="sop-flow-chart">'+flow+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+/* ============================================================
+   导出 / 导入备份
+   ============================================================ */
+function exportData(){
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  a.download = '代办清单备份-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('已导出备份文件');
+}
+function importData(e){
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const d = JSON.parse(ev.target.result);
+      if(!Array.isArray(d.tasks) || !Array.isArray(d.cats)) throw new Error('bad');
+      if(!confirm('导入将覆盖当前所有数据，确定继续吗？')) return;
+      data = {
+        cats: d.cats,
+        tasks: d.tasks,
+        sops: Array.isArray(d.sops) ? d.sops : [],
+        deletedIds: Array.isArray(d.deletedIds) ? d.deletedIds : [],
+        sopDeletedIds: Array.isArray(d.sopDeletedIds) ? d.sopDeletedIds : []
+      };
+      saveData(); renderAll();
+      toast('导入成功，已恢复 '+d.tasks.length+' 项任务');
+    }catch(err){
+      toast('导入失败：文件格式不正确', true);
+    }
+  };
+  reader.readAsText(f);
+  e.target.value = '';
+}
+
+/* ============================================================
+   云同步（Supabase）核心逻辑
+   ============================================================ */
+const SYNC_KEY = 'taskboard_sync_v1';   // 缓存上次同步信息
+const CLOUD_TABLE = 'taskboard';        // Supabase 表名
+
+let syncTimer = null;                   // 防抖定时器
+let syncing = false;                    // 防止并发
+
+function syncState(){ return { ok:false, busy:false, err:false, text:'未配置' }; }
+function getCachedSync(){
+  try{ return JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); }
+  catch(e){ return null; }
+}
+function setSyncUI(mode, text){
+  const dot = document.getElementById('syncDot');
+  const tx = document.getElementById('syncText');
+  if(!dot || !tx) return;
+  dot.className = 'sync-dot ' + (mode==='ok' ? 'ok' : mode==='err' ? 'err' : mode==='busy' ? 'busy' : '');
+  tx.textContent = text;
+}
+function fmtSyncTime(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  const p = n=>String(n).padStart(2,'0');
+  return (d.getMonth()+1)+'月'+d.getDate()+'日 '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function renderSyncChip(){
+  if(!CLOUD.enabled){ setSyncUI('', '未配置云端'); return; }
+  const c = getCachedSync();
+  if(!c || !c.time){ setSyncUI('', '待首次同步'); return; }
+  setSyncUI(c.err ? 'err' : 'ok', (c.err ? '同步失败 · ' : '已同步 · ') + fmtSyncTime(c.time));
+}
+
+/* 拉取云端数据：返回 {data, updatedAt} 或 null */
+async function pullCloud(){
+  const resp = await fetch(CLOUD.url + '/rest/v1/' + CLOUD_TABLE + '?select=data,updated_at&id=eq.1', {
+    headers: {
+      'apikey': CLOUD.key,
+      'Authorization': 'Bearer ' + CLOUD.key,
+      'Accept': 'application/json'
+    }
+  });
+  if(!resp.ok) throw new Error('pull ' + resp.status);
+  const rows = await resp.json();
+  if(!rows || !rows.length || !rows[0].data) return null;
+  return { data: rows[0].data, updatedAt: rows[0].updated_at || 0 };
+}
+
+/* 推送：PATCH 更新云端数据（jsonb 列更新，兼容 Supabase 新版 API） */
+async function pushCloud(){
+  const resp = await fetch(CLOUD.url + '/rest/v1/' + CLOUD_TABLE + '?id=eq.1', {
+    method: 'PATCH',
+    headers: {
+      'apikey': CLOUD.key,
+      'Authorization': 'Bearer ' + CLOUD.key,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify({ data: data, updated_at: new Date().toISOString() })
+  });
+  if(!resp.ok) throw new Error('push ' + resp.status);
+  const rows = await resp.json();
+  if(!rows || !rows.length) throw new Error('push empty');
+  return rows[0];
+}
+
+/* 合并云端数据到本地（保留本地较新的任务与分类，按 id 合并） */
+function mergeRemote(remote){
+  if(!remote || !remote.data) return;
+  const rd = remote.data;
+  const rcats = Array.isArray(rd.cats) ? rd.cats : [];
+  const rtasks = Array.isArray(rd.tasks) ? rd.tasks : [];
+  const rsops = Array.isArray(rd.sops) ? rd.sops : [];
+  const localUpdated = data.__localUpdated || 0;
+  const remoteUpdated = new Date(remote.updatedAt || 0).getTime() || 0;
+
+  // 云端墓碑 → 本地对应任务一并删除（云端已删，本地残留应移除）
+  const rDel = new Set(Array.isArray(rd.deletedIds) ? rd.deletedIds : []);
+  if(rDel.size) data.tasks = data.tasks.filter(t=> !rDel.has(t.id));
+
+  // 本地墓碑 → 云端对应任务不再进入本地（本地删了，防止复活）
+  const lDel = new Set(data.deletedIds || []);
+  const rtasksClean = lDel.size ? rtasks.filter(r=> !(r && r.id) || !lDel.has(r.id)) : rtasks;
+
+  // 分类：以本地为主，补充云端独有的
+  const catIds = new Set(data.cats.map(c=>c.id));
+  rcats.forEach(c=>{ if(c && c.id && !catIds.has(c.id)){ data.cats.push(c); catIds.add(c.id); } });
+
+// 任务：本地与云端按 id 合并，取较新版本
+  const tasksById = new Map(data.tasks.map(t=>[t.id, t]));
+  rtasksClean.forEach(r=>{
+    if(!r || !r.id) return;
+    const local = tasksById.get(r.id);
+    if(!local){ tasksById.set(r.id, r); return; }
+    const lu = local.updated || 0, ru = r.updated || 0;
+    if(ru > lu) tasksById.set(r.id, r);
+  });
+  data.tasks = Array.from(tasksById.values());
+
+  // SOP 墓碑：云端已删 → 本地删除对应 SOP；本地墓碑 → 云端 SOP 不再进入本地
+  const rSopDel = new Set(Array.isArray(rd.sopDeletedIds) ? rd.sopDeletedIds : []);
+  if(rSopDel.size) data.sops = data.sops.filter(s=> !rSopDel.has(s.id));
+  const lSopDel = new Set(data.sopDeletedIds || []);
+  const rsopsClean = lSopDel.size ? rsops.filter(r=> !(r && r.id) || !lSopDel.has(r.id)) : rsops;
+
+  // SOP：本地与云端按 id 合并，取较新版本
+  const sopsById = new Map(data.sops.map(s=>[s.id, s]));
+  rsopsClean.forEach(r=>{
+    if(!r || !r.id) return;
+    const local = sopsById.get(r.id);
+    if(!local){ sopsById.set(r.id, r); return; }
+    const lu = local.updated || 0, ru = r.updated || 0;
+    if(ru > lu) sopsById.set(r.id, r);
+  });
+  data.sops = Array.from(sopsById.values());
+
+  // 墓碑取并集，长期保留以阻止任意端"复活"已删任务
+  const union = new Set([...lDel, ...rDel]);
+  data.deletedIds = Array.from(union);
+  const sopUnion = new Set([...lSopDel, ...rSopDel]);
+  data.sopDeletedIds = Array.from(sopUnion);
+
+  // 合并产生了变化才更新本地时间戳，避免每次都判定"本地较新"覆盖云端
+  const changed = JSON.stringify(data.tasks) !== JSON.stringify(rtasksClean) || JSON.stringify(data.cats) !== JSON.stringify(rcats) || JSON.stringify(data.deletedIds) !== JSON.stringify(rd.deletedIds||[]) || JSON.stringify(data.sops) !== JSON.stringify(rsopsClean) || JSON.stringify(data.sopDeletedIds) !== JSON.stringify(rd.sopDeletedIds||[]);
+  if(changed){
+    data.__localUpdated = Date.now();
+  }
+  saveData();  // 合并结果立即持久化到本地缓存，防止刷新丢失
+}
+
+/* 主动拉取并合并（页面加载时/手动同步时用） */
+async function pullAndMerge(){
+  if(!CLOUD.enabled) return;
+  setSyncUI('busy', '拉取云端…');
+  try{
+    const remote = await pullCloud();
+    if(remote && remote.data){
+      // 云端已有数据：合并后比较更新时间，若本地较新则推回云端
+      const before = JSON.stringify(data);
+      mergeRemote(remote);
+      const cloudUpdated = new Date(remote.updatedAt || 0).getTime() || 0;
+      const localChanged = JSON.stringify(data) !== before;
+      if(localChanged || (data.__localUpdated || 0) >= cloudUpdated){
+        // 本地有云端没有的内容 → 推送
+        await pushCloud();
+      }
+      renderAll();
+      localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:false }));
+      setSyncUI('ok', '已同步 · ' + fmtSyncTime(Date.now()));
+    }else{
+      // 云端还没有数据 → 推送本地
+      await pushCloud();
+      localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:false }));
+      setSyncUI('ok', '已同步 · ' + fmtSyncTime(Date.now()));
+    }
+  }catch(e){
+    console.warn('云同步拉取失败', e);
+    localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:true }));
+    setSyncUI('err', '同步失败');
+  }
+}
+
+/* ============ 防抖推送 ============ */
+function scheduleSync(){
+  if(!CLOUD.enabled || syncing) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=> pushToCloud(), 2000);
+}
+
+async function pushToCloud(){
+  if(!CLOUD.enabled || syncing) return;
+  syncing = true;
+  setSyncUI('busy', '同步中…');
+  try{
+    // 推送前先快速拉取一次，避免覆盖云端新数据（拉取成功则合并后重新推送）
+    try{
+      const remote = await pullCloud();
+      if(remote && remote.data){
+        mergeRemote(remote);
+        renderAll();
+      }
+    }catch(e){ /* 拉取失败仍继续推送本地 */ }
+    await pushCloud();
+    localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:false }));
+    setSyncUI('ok', '已同步 · ' + fmtSyncTime(Date.now()));
+  }catch(e){
+    console.warn('云同步推送失败', e);
+    localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:true }));
+    setSyncUI('err', '同步失败');
+  }finally{
+    syncing = false;
+  }
+}
+
+/** 手动同步（点击状态条触发） */
+function manualSync(){
+  if(!CLOUD.enabled){ toast('尚未配置云端同步，请按说明填写配置', true); return; }
+  if(syncing){ toast('正在同步中…'); return; }
+  pushToCloud();
+}
+
+/** 初始化同步状态显示，并在启用时自动拉取一次 */
+function initSync(){
+  renderSyncChip();
+  const chip = document.getElementById('syncChip');
+  if(chip) chip.addEventListener('click', manualSync);
+  if(CLOUD.enabled) pullAndMerge();
+}
+
+/* ============================================================
+   Toast
+   ============================================================ */
+let toastTimer = null;
+function toast(msg, danger){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = danger ? 'danger show' : 'show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.className = '', 2600);
+}
+
+/* ============================================================
+   转义
+   ============================================================ */
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+const escapeHtml = esc;
+
+/* ============================================================
+   初始化
+   ============================================================ */
+function init(){
+  const chip = document.getElementById('todayChip');
+  const now = new Date();
+  chip.innerHTML = '📅 <b>'+ now.getFullYear() +'年'+ (now.getMonth()+1) +'月'+ now.getDate() +'日</b> · 周'+['日','一','二','三','四','五','六'][now.getDay()] + ' · 待办 <span class="count">'+data.tasks.filter(t=>!t.done).length+'</span> 项';
+  document.getElementById('searchInput').addEventListener('input', e=>{
+    state.search = e.target.value;
+    renderView();
+  });
+  // 初始示例数据（首次使用）
+  if(data.tasks.length === 0){
+    const at = (days, h, m)=>{ const x = new Date(); x.setHours(0,0,0,0); x.setDate(x.getDate()+days); x.setHours(h,m,0,0); return x; };
+    data.tasks = [
+      { id:uid(), title:'整理今日周报数据', cat:'c1', priority:2, start:toLocalInput(at(0,8,30)), ddl:toLocalInput(at(0,9,0)), est:10, note:null, remind:true, done:false, created:Date.now() },
+      { id:uid(), title:'晨会准备与纪要', cat:'c1', priority:2, start:toLocalInput(at(0,9,10)), ddl:toLocalInput(at(0,10,0)), est:15, note:null, remind:true, done:false, created:Date.now() },
+      { id:uid(), title:'回复客户邮件', cat:'c1', priority:1, start:toLocalInput(at(0,10,0)), ddl:toLocalInput(at(0,11,30)), est:10, note:null, remind:true, done:false, created:Date.now() },
+      { id:uid(), title:'提交项目周报', cat:'c1', priority:1, start:toLocalInput(at(0,8,30)), ddl:toLocalInput(at(1,18,0)), est:45, note:null, remind:true, done:false, created:Date.now() },
+      { id:uid(), title:'健身 30 分钟', cat:'c2', priority:3, start:toLocalInput(at(0,20,0)), ddl:toLocalInput(at(0,21,0)), est:30, note:null, remind:true, done:false, created:Date.now() },
+      { id:uid(), title:'学习智能体相关知识', cat:'c3', priority:3, start:toLocalInput(at(0,20,0)), ddl:toLocalInput(at(2,22,0)), est:40, note:null, remind:true, done:false, created:Date.now() }
+    ];
+    saveData();
+  }
+  renderAll();
+  setInterval(checkReminders, 30000);
+  initSync();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
