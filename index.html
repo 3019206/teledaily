@@ -1847,6 +1847,15 @@ async function createGist(){
     setSyncUI('ok', '已同步 · ' + fmtSyncTime(Date.now()));
     toast('云端同步已配置完成！');
     renderAll();
+    // 显示 Gist ID 供用户在其他设备填入
+    setTimeout(()=>{
+      alert(
+        '云端存储已创建成功！\n\n' +
+        '你的 Gist ID 是：\n' + gist.id + '\n\n' +
+        '请在其他设备上配置同步时输入这个 ID。\n' +
+        '（已自动保存到本地，无需手动记录）'
+      );
+    }, 300);
   }catch(e){
     console.warn('创建 Gist 失败', e);
     localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:true }));
@@ -1856,10 +1865,38 @@ async function createGist(){
   }
 }
 
-/* 引导输入 GitHub Token */
+/* 连接已有 Gist（第二台设备配对用） */
+async function connectGist(gistId){
+  setSyncUI('busy', '连接云端…');
+  try{
+    const resp = await fetch(GIST_API + '/' + gistId, {
+      headers: { 'Authorization': 'token ' + CLOUD.token, 'Accept': 'application/json' }
+    });
+    if(resp.status === 404) throw new Error('Gist ID 不存在');
+    if(!resp.ok) throw new Error('connect ' + resp.status);
+    const gist = await resp.json();
+    CLOUD.setGistId(gist.id);
+    // 拉取云端数据合并到本地
+    const file = gist.files && gist.files[GIST_FILENAME];
+    if(file && file.content){
+      const remote = { data: JSON.parse(file.content), updatedAt: gist.updated_at || 0 };
+      mergeRemote(remote);
+      renderAll();
+    }
+    localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:false }));
+    setSyncUI('ok', '已同步 · ' + fmtSyncTime(Date.now()));
+    toast('已连接到云端存储，同步完成！');
+  }catch(e){
+    console.warn('连接 Gist 失败', e);
+    setSyncUI('err', '连接失败');
+    toast(e.message || '连接失败，请检查 Gist ID', true);
+  }
+}
+
+/* 引导配置云端同步（支持首次创建 & 多设备配对） */
 function setupGistSync(){
   const input = prompt(
-    '【首次配置云端同步】\n\n' +
+    '【配置云端同步】\n\n' +
     '请输入 GitHub Personal Access Token（仅需 gist 权限）：\n\n' +
     '创建步骤：\n' +
     '1. 打开 https://github.com/settings/tokens/new\n' +
@@ -1874,7 +1911,18 @@ function setupGistSync(){
     return;
   }
   CLOUD.setToken(token);
-  createGist();   // Token 已保存，自动创建 Gist
+  // Token 已保存，询问是新建 Gist 还是连接已有 Gist
+  const gistInput = prompt(
+    '【选择同步方式】\n\n' +
+    '• 首台设备：直接点"取消"或留空，将自动创建新的云端存储\n' +
+    '• 其他设备：输入已创建的 Gist ID 进行配对\n\n' +
+    '请输入 Gist ID（留空则新建）：'
+  );
+  if(gistInput && gistInput.trim()){
+    connectGist(gistInput.trim());    // 连接已有 Gist
+  }else{
+    createGist();                     // 新建 Gist
+  }
 }
 
 /* 合并云端数据到本地（保留本地较新的任务与分类，按 id 合并） */
@@ -2009,11 +2057,11 @@ async function pushToCloud(){
 function manualSync(){
   if(syncing){ toast('正在同步中…'); return; }
   if(!CLOUD.token){
-    setupGistSync();    // 无 Token → 引导输入
+    setupGistSync();    // 无 Token → 引导输入 Token + 选择新建/配对
     return;
   }
   if(!CLOUD.gistId){
-    createGist();       // 有 Token 无 Gist → 创建
+    setupGistSync();    // 有 Token 无 Gist → 同样引导（可能用户想输入已有 ID）
     return;
   }
   pushToCloud();
