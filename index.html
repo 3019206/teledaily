@@ -467,9 +467,10 @@ input,select,textarea{ font-family:inherit; color:inherit; }
         <button class="ms-btn active" data-mod="task" onclick="setModule('task')">📋 任务清单</button>
         <button class="ms-btn" data-mod="sop" onclick="setModule('sop')">📐 SOP 流程</button>
       </div>
-      <div class="sync-chip" id="syncChip" title="云端同步状态，点击立即同步">
+      <div class="sync-chip" id="syncChip" title="云端同步状态，点击打开设置">
         <span class="sync-dot" id="syncDot"></span><span id="syncText">同步中…</span>
       </div><button class="sync-pair-btn" id="syncPairBtn" title="查看多设备配对信息" onclick="showGistId()" style="display:none;">🔗</button>
+      <button class="sync-pair-btn" id="syncSetBtn" title="云同步设置（Token / Gist ID）" onclick="openSyncModal()" style="font-size:14px;">⚙️</button>
       <div class="today-chip" id="todayChip"></div>
     </div>
   </header>
@@ -642,7 +643,7 @@ input,select,textarea{ font-family:inherit; color:inherit; }
 </div>
 
 <!-- SOP 编辑弹窗 -->
-<div class="modal-mask" id="sopModal" onclick="if(event.target===this)closeSopModal()">
+<div class="modal-mask" id="sopModal" onclick="if(event.target===this)requestCloseSopModal()">
   <div class="modal" style="max-width:560px;">
     <div class="modal-head">
       <h3 id="sopModalTitle">新建流程</h3>
@@ -671,6 +672,32 @@ input,select,textarea{ font-family:inherit; color:inherit; }
       <div class="form-actions">
         <button type="button" class="btn btn-ghost" onclick="closeSopModal()">取消</button>
         <button type="button" class="btn btn-primary" id="sopSaveBtn" onclick="saveSop()">保存流程</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 云同步设置弹窗 -->
+<div class="modal-mask" id="syncModal" onclick="if(event.target===this)closeSyncModal()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <h3>云同步设置</h3>
+      <button class="x" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="modal-form" style="padding:16px 22px 22px; display:grid; gap:14px;">
+      <div class="field">
+        <label>GitHub Token <span style="font-weight:400;color:var(--ink-faint);">（仅需 gist 权限）</span></label>
+        <input type="password" id="fGistToken" placeholder="粘贴 GitHub Personal Access Token" autocomplete="off">
+        <div class="hint">创建：github.com/settings/tokens/new → 勾选 gist → Generate token</div>
+      </div>
+      <div class="field">
+        <label>Gist ID <span style="font-weight:400;color:var(--ink-faint);">（多设备填同一个 ID 即可配对）</span></label>
+        <input type="text" id="fGistId" placeholder="留空则自动新建" autocomplete="off">
+        <div class="hint">其他设备：输入本机 Gist ID 即可同步同一份数据</div>
+      </div>
+      <div class="form-actions" style="gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-ghost" onclick="clearSyncConfig()" id="syncClearBtn">清除配置</button>
+        <button type="button" class="btn btn-primary" onclick="saveSyncConfig()">保存并同步</button>
       </div>
     </div>
   </div>
@@ -1428,7 +1455,34 @@ function openSopModal(id){
   m.classList.add('open');
   document.getElementById('fSopName').focus();
 }
-function closeSopModal(){ document.getElementById('sopModal').classList.remove('open'); }
+function closeSopModal(force){
+  if(!force && !confirmDiscardSop()) return;   // 有未保存改动时二次确认（force=true 跳过，供 saveSop 调用）
+  document.getElementById('sopModal').classList.remove('open');
+}
+/* 遮罩点击关闭：与 ✕/取消 同一套防误关逻辑 */
+function requestCloseSopModal(){ closeSopModal(); }
+/* 统一确认逻辑：无改动直接放行；有改动弹确认框，确认后才真正关闭 */
+function confirmDiscardSop(){
+  if(!sopModalHasChanges()) return true;
+  return confirm('当前流程有未保存的修改，确定放弃并关闭吗？');
+}
+/* 判断 SOP 编辑弹窗是否存在未保存改动：
+   新建流程：已输入流程名或已添加节点；编辑流程：名称/节点与原始数据不同 */
+function sopModalHasChanges(){
+  const name = document.getElementById('fSopName').value.trim();
+  if(editingSopId){
+    const s = data.sops.find(x=>x.id===editingSopId);
+    if(!s) return true;
+    if(name !== s.name) return true;
+    const cur = sopEditingNodes;
+    if(cur.length !== s.nodes.length) return true;
+    for(let i=0;i<cur.length;i++){
+      if(cur[i].name !== s.nodes[i].name || (cur[i].est||null) !== (s.nodes[i].est||null)) return true;
+    }
+    return false;
+  }
+  return name !== '' || sopEditingNodes.length > 0;
+}
 function renderSopNodes(){
   const box = document.getElementById('sopNodeList');
   box.innerHTML = sopEditingNodes.map((n,i)=>{
@@ -1525,7 +1579,7 @@ function saveSop(){
     data.sops.push({ id: uid(), name, nodes: sopEditingNodes, created: Date.now(), updated: Date.now() });
     toast('已创建流程「'+name+'」');
   }
-  saveData(); renderSops(); closeSopModal();
+  saveData(); renderSops(); closeSopModal(true);  // 保存后强制关闭，跳过未保存确认
 }
 function deleteSop(id){
   const s = data.sops.find(x=>x.id===id);
@@ -1815,6 +1869,43 @@ function showGistId(){
     '3. 在第二步输入此 Gist ID\n\n' +
     '（可在输入框中长按全选复制）'
   );
+}
+
+/* ============ 云同步设置弹窗 ============ */
+function openSyncModal(){
+  const m = document.getElementById('syncModal');
+  document.getElementById('fGistToken').value = CLOUD.token || '';
+  document.getElementById('fGistId').value = CLOUD.gistId || '';
+  m.classList.add('open');
+  if(!CLOUD.token) document.getElementById('fGistToken').focus();
+}
+function closeSyncModal(){ document.getElementById('syncModal').classList.remove('open'); }
+
+/* 保存 Token / Gist ID 并立即同步 */
+function saveSyncConfig(){
+  const token = document.getElementById('fGistToken').value.trim();
+  const gistId = document.getElementById('fGistId').value.trim();
+  if(!token){ toast('请填写 GitHub Token', true); return; }
+  if(token.length < 10){ toast('Token 格式不正确', true); return; }
+  CLOUD.setToken(token);
+  if(gistId){
+    CLOUD.setGistId(gistId);
+    closeSyncModal();
+    pushToCloud();       // 已有 ID → 直接同步
+  }else{
+    closeSyncModal();
+    createGist();        // 无 ID → 新建 Gist
+  }
+}
+
+/* 清除云端配置（Token + Gist ID） */
+function clearSyncConfig(){
+  if(!confirm('确定清除云端同步配置吗？清除后需重新输入 Token 和 Gist ID。')) return;
+  CLOUD.setToken(null);
+  CLOUD.setGistId(null);
+  localStorage.removeItem(SYNC_KEY);
+  renderSyncChip();
+  toast('已清除云端同步配置');
 }
 
 /* 拉取 Gist 数据：返回 {data, updatedAt} 或 null */
