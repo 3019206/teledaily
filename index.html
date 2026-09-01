@@ -736,15 +736,22 @@ const DEFAULT_DATA = {
   sopDeletedIds: []    // SOP 删除墓碑
 };
 
-/* ---------- 云同步配置（部署时填写） ----------
- * 1. 在 supabase.com 用 GitHub 登录创建项目
- * 2. 在 SQL Editor 执行建表语句（见说明文档）
- * 3. 将下方两个值替换为你项目的值后保存
+/* ---------- 云同步配置（GitHub Gist 免费方案） ----------
+ * 首次使用：点击右上角同步状态 → 输入 GitHub Token → 自动创建 Gist
+ * Token 仅需 gist 权限，存储在浏览器 localStorage（不上传到任何服务器）
+ * 创建 Token：https://github.com/settings/tokens/new?scopes=gist
  */
+const GIST_TOKEN_KEY = 'taskboard_gist_token';   // GitHub Personal Access Token
+const GIST_ID_KEY    = 'taskboard_gist_id';      // Gist ID
+const GIST_FILENAME  = 'taskboard_data.json';    // Gist 内文件名
+const GIST_API       = 'https://api.github.com/gists';
+
 const CLOUD = {
-  enabled: true,             // 已启用云端同步
-  url: 'https://jwnmbneiikwormiblzdf.supabase.co',   // Project URL
-  key: 'sb_publishable_MhMNwr2lWgGr_bRN3GYhjQ_Hvx4cftM'                // anon public key
+  get enabled(){ return !!(this.token && this.gistId); },
+  get token(){ return localStorage.getItem(GIST_TOKEN_KEY) || ''; },
+  get gistId(){ return localStorage.getItem(GIST_ID_KEY) || ''; },
+  setToken(v){ if(v) localStorage.setItem(GIST_TOKEN_KEY, v.trim()); else localStorage.removeItem(GIST_TOKEN_KEY); },
+  setGistId(v){ if(v) localStorage.setItem(GIST_ID_KEY, v.trim()); else localStorage.removeItem(GIST_ID_KEY); }
 };
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -1753,15 +1760,20 @@ function importData(e){
 }
 
 /* ============================================================
-   云同步（Supabase）核心逻辑
+   云同步（GitHub Gist）核心逻辑
    ============================================================ */
 const SYNC_KEY = 'taskboard_sync_v1';   // 缓存上次同步信息
-const CLOUD_TABLE = 'taskboard';        // Supabase 表名
 
 let syncTimer = null;                   // 防抖定时器
 let syncing = false;                    // 防止并发
 
-function syncState(){ return { ok:false, busy:false, err:false, text:'未配置' }; }
+function syncState(){
+  if(!CLOUD.token) return { ok:false, busy:false, err:false, text:'未配置' };
+  if(!CLOUD.gistId) return { ok:false, busy:false, err:false, text:'待配置' };
+  const c = getCachedSync();
+  if(!c) return { ok:false, busy:false, err:false, text:'待同步' };
+  return { ok:!c.err, busy:false, err:!!c.err, text: c.err ? '同步失败' : '已同步' };
+}
 function getCachedSync(){
   try{ return JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); }
   catch(e){ return null; }
@@ -1780,43 +1792,89 @@ function fmtSyncTime(ts){
   return (d.getMonth()+1)+'月'+d.getDate()+'日 '+p(d.getHours())+':'+p(d.getMinutes());
 }
 function renderSyncChip(){
-  if(!CLOUD.enabled){ setSyncUI('', '未配置云端'); return; }
+  if(!CLOUD.token){ setSyncUI('', '未配置云端'); return; }
+  if(!CLOUD.gistId){ setSyncUI('', '点击配置云端'); return; }
   const c = getCachedSync();
   if(!c || !c.time){ setSyncUI('', '待首次同步'); return; }
   setSyncUI(c.err ? 'err' : 'ok', (c.err ? '同步失败 · ' : '已同步 · ') + fmtSyncTime(c.time));
 }
 
-/* 拉取云端数据：返回 {data, updatedAt} 或 null */
+/* 拉取 Gist 数据：返回 {data, updatedAt} 或 null */
 async function pullCloud(){
-  const resp = await fetch(CLOUD.url + '/rest/v1/' + CLOUD_TABLE + '?select=data,updated_at&id=eq.1', {
-    headers: {
-      'apikey': CLOUD.key,
-      'Authorization': 'Bearer ' + CLOUD.key,
-      'Accept': 'application/json'
-    }
+  const resp = await fetch(GIST_API + '/' + CLOUD.gistId, {
+    headers: { 'Authorization': 'token ' + CLOUD.token, 'Accept': 'application/json' }
   });
+  if(resp.status === 404) return null;    // Gist 不存在
   if(!resp.ok) throw new Error('pull ' + resp.status);
-  const rows = await resp.json();
-  if(!rows || !rows.length || !rows[0].data) return null;
-  return { data: rows[0].data, updatedAt: rows[0].updated_at || 0 };
+  const gist = await resp.json();
+  const file = gist.files && gist.files[GIST_FILENAME];
+  if(!file || !file.content) return null;
+  return { data: JSON.parse(file.content), updatedAt: gist.updated_at || 0 };
 }
 
-/* 推送：PATCH 更新云端数据（jsonb 列更新，兼容 Supabase 新版 API） */
+/* 推送：PATCH 更新 Gist 文件内容 */
 async function pushCloud(){
-  const resp = await fetch(CLOUD.url + '/rest/v1/' + CLOUD_TABLE + '?id=eq.1', {
+  const resp = await fetch(GIST_API + '/' + CLOUD.gistId, {
     method: 'PATCH',
-    headers: {
-      'apikey': CLOUD.key,
-      'Authorization': 'Bearer ' + CLOUD.key,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({ data: data, updated_at: new Date().toISOString() })
+    headers: { 'Authorization': 'token ' + CLOUD.token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(data) } } })
   });
   if(!resp.ok) throw new Error('push ' + resp.status);
-  const rows = await resp.json();
-  if(!rows || !rows.length) throw new Error('push empty');
-  return rows[0];
+  const gist = await resp.json();
+  return gist;
+}
+
+/* 首次使用：创建私有 Gist 并保存 ID */
+async function createGist(){
+  setSyncUI('busy', '创建云端存储…');
+  try{
+    const resp = await fetch(GIST_API, {
+      method: 'POST',
+      headers: { 'Authorization': 'token ' + CLOUD.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description: '日常工作代办清单 - 云端同步数据',
+        public: false,
+        files: { [GIST_FILENAME]: { content: JSON.stringify(data) } }
+      })
+    });
+    if(!resp.ok){
+      if(resp.status === 401) throw new Error('Token 无效');
+      throw new Error('create ' + resp.status);
+    }
+    const gist = await resp.json();
+    CLOUD.setGistId(gist.id);
+    localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:false }));
+    setSyncUI('ok', '已同步 · ' + fmtSyncTime(Date.now()));
+    toast('云端同步已配置完成！');
+    renderAll();
+  }catch(e){
+    console.warn('创建 Gist 失败', e);
+    localStorage.setItem(SYNC_KEY, JSON.stringify({ time: Date.now(), err:true }));
+    setSyncUI('err', '配置失败');
+    CLOUD.setToken(null);  // Token 无效则清除，方便重试
+    toast('Token 无效或网络错误，请检查后重试', true);
+  }
+}
+
+/* 引导输入 GitHub Token */
+function setupGistSync(){
+  const input = prompt(
+    '【首次配置云端同步】\n\n' +
+    '请输入 GitHub Personal Access Token（仅需 gist 权限）：\n\n' +
+    '创建步骤：\n' +
+    '1. 打开 https://github.com/settings/tokens/new\n' +
+    '2. 勾选 "gist" 权限\n' +
+    '3. 点击 "Generate token" 并复制 Token 粘贴到下方\n\n' +
+    'Token 仅存储在本地浏览器，不会上传任何其他服务器。'
+  );
+  if(!input) return;
+  const token = input.trim();
+  if(token.length < 10){
+    toast('Token 格式不正确', true);
+    return;
+  }
+  CLOUD.setToken(token);
+  createGist();   // Token 已保存，自动创建 Gist
 }
 
 /* 合并云端数据到本地（保留本地较新的任务与分类，按 id 合并） */
@@ -1949,8 +2007,15 @@ async function pushToCloud(){
 
 /** 手动同步（点击状态条触发） */
 function manualSync(){
-  if(!CLOUD.enabled){ toast('尚未配置云端同步，请按说明填写配置', true); return; }
   if(syncing){ toast('正在同步中…'); return; }
+  if(!CLOUD.token){
+    setupGistSync();    // 无 Token → 引导输入
+    return;
+  }
+  if(!CLOUD.gistId){
+    createGist();       // 有 Token 无 Gist → 创建
+    return;
+  }
   pushToCloud();
 }
 
