@@ -83,6 +83,8 @@ input,select,textarea{ font-family:inherit; color:inherit; }
 .sync-dot.err{ background:var(--danger); }
 .sync-dot.busy{ background:var(--accent); animation:pulse 1.1s ease infinite; }
 @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+.sync-pair-btn{ font-size:13px; line-height:1; padding:7px 9px; border:1px solid var(--line); border-radius:999px; background:var(--surface); cursor:pointer; transition:border-color .15s; flex:none; }
+.sync-pair-btn:hover{ border-color:var(--accent); }
 
 /* ============================================================
    卡片
@@ -467,7 +469,7 @@ input,select,textarea{ font-family:inherit; color:inherit; }
       </div>
       <div class="sync-chip" id="syncChip" title="云端同步状态，点击立即同步">
         <span class="sync-dot" id="syncDot"></span><span id="syncText">同步中…</span>
-      </div>
+      </div><button class="sync-pair-btn" id="syncPairBtn" title="查看多设备配对信息" onclick="showGistId()" style="display:none;">🔗</button>
       <div class="today-chip" id="todayChip"></div>
     </div>
   </header>
@@ -1792,11 +1794,27 @@ function fmtSyncTime(ts){
   return (d.getMonth()+1)+'月'+d.getDate()+'日 '+p(d.getHours())+':'+p(d.getMinutes());
 }
 function renderSyncChip(){
-  if(!CLOUD.token){ setSyncUI('', '未配置云端'); return; }
-  if(!CLOUD.gistId){ setSyncUI('', '点击配置云端'); return; }
+  const pairBtn = document.getElementById('syncPairBtn');
+  if(!CLOUD.token){ setSyncUI('', '未配置云端'); if(pairBtn) pairBtn.style.display='none'; return; }
+  if(!CLOUD.gistId){ setSyncUI('', '点击配置云端'); if(pairBtn) pairBtn.style.display='none'; return; }
   const c = getCachedSync();
-  if(!c || !c.time){ setSyncUI('', '待首次同步'); return; }
+  if(!c || !c.time){ setSyncUI('', '待首次同步'); if(pairBtn) pairBtn.style.display='none'; return; }
   setSyncUI(c.err ? 'err' : 'ok', (c.err ? '同步失败 · ' : '已同步 · ') + fmtSyncTime(c.time));
+  if(pairBtn) pairBtn.style.display='';   // 已配置 → 显示配对按钮
+}
+
+/** 显示 Gist ID 供其他设备配对 */
+function showGistId(){
+  if(!CLOUD.gistId){ toast('尚未配置云端存储', true); return; }
+  alert(
+    '【多设备配对信息】\n\n' +
+    'Gist ID：\n' + CLOUD.gistId + '\n\n' +
+    '在其他设备上配置同步时：\n' +
+    '1. 点击同步状态条\n' +
+    '2. 输入同一个 GitHub Token\n' +
+    '3. 在第二步输入此 Gist ID\n\n' +
+    '（可在输入框中长按全选复制）'
+  );
 }
 
 /* 拉取 Gist 数据：返回 {data, updatedAt} 或 null */
